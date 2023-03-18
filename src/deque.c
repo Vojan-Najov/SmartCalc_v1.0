@@ -196,7 +196,7 @@ void deque_print(deque_t *this) {
 						printf("/");
 						break;
 					case MOD:
-						printf("%");
+						printf("%%");
 						break;
 					case POW:
 						printf("^");
