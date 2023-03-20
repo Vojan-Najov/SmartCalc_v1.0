@@ -3,6 +3,7 @@
 #include <string.h>
 #include "deque.h"
 #include "lexer.h"
+#include "parser.h"
 
 int main() {
 	ssize_t nread;
@@ -46,8 +47,10 @@ int main() {
 			deque_t *lexems = lexer(str);
 			if (lexems) {
 				deque_print(lexems);
-				deque_clear(lexems);
-				free(lexems);
+				deque_t *rpn = parser(lexems);
+				deque_print(rpn);
+				deque_clear(rpn);
+				free(rpn);
 			}
 		}
 	} while (nread > 0);
