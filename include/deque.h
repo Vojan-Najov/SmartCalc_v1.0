@@ -3,9 +3,10 @@
 
 enum TOKEN {BAD_TOKEN = -1, EMPTY_TOKEN = 0, NUMBER, VAR, \
 			UNARY_OP, BINARY_OP, FUNCTION, LBRACKET, RBRACKET};
-enum UNARY_OPERATOR {MINUS, PLUS};
+enum UNARY_OPERATOR {MINUS = 0, PLUS = 1};
 enum BINARY_OPERATOR {ADD = 0, SUB = 1, MUL = 2, DIV = 3, MOD = 4, POW = 5};
-enum FUNCTION {COS, SIN, TAN, ACOS, ASIN, ATAN, SQRT, LN, LOG};
+enum FUNCTION {COS = 0, SIN = 1, TAN = 2, ACOS = 3, ASIN = 4, \
+			   ATAN = 5, SQRT = 6, LN = 7, LOG = 8};
 
 typedef struct token_s {
 	int type;
