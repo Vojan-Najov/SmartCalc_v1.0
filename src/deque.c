@@ -1,42 +1,40 @@
 #include "deque.h"
 #include <stdlib.h>
 
-static node_t *create_node(data_t *data) {
+static node_t *create_node(token_t *token) {
 	node_t *node;
 
 	node = (node_t *) malloc(sizeof(node_t));
 	if (node != NULL) {
 		node->prev = NULL;
 		node->next = NULL;
-		node->data = *data;
+		node->token = *token;
 	}
 
 	return (node);
 }
 
-int init_deque(deque_t **deq) {
-	int status = 0;
+deque_t *create_deque(void) {
+	deque_t *deq;
 
-	*deq = (deque_t *) malloc(sizeof(deque_t));
-	if (*deq != NULL) {
-		(*deq)->first = NULL;
-		(*deq)->last = NULL;
-		(*deq)->push_back = &deque_push_back;
-		(*deq)->push_front = &deque_push_front;
-		(*deq)->pop_back = &deque_pop_back;
-		(*deq)->pop_front = &deque_pop_front;
-		(*deq)->is_empty = &deque_is_empty;
-		(*deq)->clear = &deque_clear;
-		(*deq)->peek_back = &deque_peek_back;
-		(*deq)->peek_front = &deque_peek_front;
-	} else {
-		status = 1;
+	deq = (deque_t *) malloc(sizeof(deque_t));
+	if (deq != NULL) {
+		deq->first = NULL;
+		deq->last = NULL;
+		deq->push_back = &deque_push_back;
+		deq->push_front = &deque_push_front;
+		deq->pop_back = &deque_pop_back;
+		deq->pop_front = &deque_pop_front;
+		deq->is_empty = &deque_is_empty;
+		deq->clear = &deque_clear;
+		deq->peek_back = &deque_peek_back;
+		deq->peek_front = &deque_peek_front;
 	}
 
-	return (status);
+	return (deq);
 }
 
-int deque_push_back(deque_t *this, data_t *data) {
+int deque_push_back(deque_t *this, token_t *data) {
 	node_t *node;
 	int status = 0;
 
@@ -56,7 +54,7 @@ int deque_push_back(deque_t *this, data_t *data) {
 	return (status);
 }
 
-int deque_push_front(deque_t *this, data_t *data) {
+int deque_push_front(deque_t *this, token_t *data) {
 	node_t *node;
 	int status = 0;
 
@@ -76,9 +74,9 @@ int deque_push_front(deque_t *this, data_t *data) {
 	return (status);
 }
 
-data_t deque_pop_back(deque_t *this) {
+token_t deque_pop_back(deque_t *this) {
 	node_t *node;
-	data_t data;
+	token_t token;
 
 	node = this->last;
 	if (node->prev != NULL) {
@@ -87,15 +85,15 @@ data_t deque_pop_back(deque_t *this) {
 	} else {
 		this->last = this->first = NULL;
 	}
-	data = node->data;
+	token = node->token;
 	free(node);
 
-	return (data);
+	return (token);
 }
 
-data_t deque_pop_front(deque_t *this) {
+token_t deque_pop_front(deque_t *this) {
 	node_t *node;
-	data_t data;
+	token_t token;
 
 	node = this->first;
 	if (node->next != NULL) {
@@ -104,10 +102,10 @@ data_t deque_pop_front(deque_t *this) {
 	} else {
 		this->first = this->last = NULL;
 	}
-	data = node->data;
+	token = node->token;
 	free(node);
 
-	return (data);
+	return (token);
 }
 
 int deque_is_empty(deque_t *this) {
@@ -124,95 +122,100 @@ void deque_clear(deque_t *this) {
 	}
 }
 
-data_t *deque_peek_back(deque_t *this) {
-	return (&this->last->data);
+token_t *deque_peek_back(deque_t *this) {
+	return (&this->last->token);
 }
 
-data_t *deque_peek_front(deque_t *this) {
-	return (&this->first->data);
+token_t *deque_peek_front(deque_t *this) {
+	return (&this->first->token);
 }
 
 #include <stdio.h>
 void deque_print(deque_t *this) {
 	node_t *node;
 
-	printf("deque's content:\n");
-	if (this != NULL) {
-		node = this->first;
-		while (node != NULL) {
-			printf("_");
-			if (node->data.type == OPERAND) {
-				printf("%f", node->data.content.operand);
-			} else if (node->data.type == VAR) {
-				printf("x");
-			} else if (node->data.type == UNARY_OP) {
-				switch (node->data.content.unary_op) {
-					case MINUS:
-						printf("-");
-						break;
-					case PLUS:
-						printf("+");
-						break;
-					case COS:
-						printf("cos");
-						break;
-					case SIN:
-						printf("sin");
-						break;
-					case TAN:
-						printf("tan");
-						break;
-					case ACOS:
-						printf("acos");
-						break;
-					case ASIN:
-						printf("asin");
-						break;
-					case ATAN:
-						printf("atan");
-						break;
-					case SQRT:
-						printf("sqrt");
-						break;
-					case LN:
-						printf("ln");
-						break;
-					case LOG:
-						printf("log");
-						break;
-				}
-			} else if (node->data.type == BINARY_OP) {
-				switch (node->data.content.binary_op) {
-					case ADD:
-						printf("+");
-						break;
-					case SUB:
-						printf("-");
-						break;
-					case MULT:
-						printf("*");
-						break;
-					case DIV:
-						printf("/");
-						break;
-					case MOD:
-						printf("%%");
-						break;
-					case POW:
-						printf("^");
-						break;
-				}
-			} else if (node->data.type == LBRACKET) {
-				printf("(");
-			} else if (node->data.type == RBRACKET) {
-				printf(")");
-			} else {
-				printf("ERROR");
-			}
-			printf("_\n");
-			node = node->next;
-		}
-	} else {
-		printf("_deque is NULL_\n");
+	printf("deque's value:\n");
+	node = this->first;
+	while (node != NULL) {
+		printf("_");
+		token_t token = node->token;
+		print_token(token);
+		printf("_\n");
+		node = node->next;
 	}
 }
+
+void print_token(token_t token) {
+	if (token.type == NUMBER) {
+		printf("%f", token.value.num);
+	} else if (token.type == VAR) {
+		printf("x");
+	} else if (token.type == UNARY_OP) {
+		switch (token.value.unary_op) {
+			case MINUS:
+				printf("-");
+				break;
+			case PLUS:
+				printf("+");
+				break;
+		}
+	} else if (token.type == FUNCTION) {
+		switch (token.value.func) {
+			case COS:
+				printf("cos");
+				break;
+			case SIN:
+				printf("sin");
+				break;
+			case TAN:
+				printf("tan");
+				break;
+			case ACOS:
+				printf("acos");
+				break;
+			case ASIN:
+				printf("asin");
+				break;
+			case ATAN:
+				printf("atan");
+				break;
+			case SQRT:
+				printf("sqrt");
+				break;
+			case LN:
+				printf("ln");
+				break;
+			case LOG:
+				printf("log");
+				break;
+			}
+	} else if (token.type == BINARY_OP) {
+		switch (token.value.binary_op) {
+			case ADD:
+				printf("++");
+				break;
+			case SUB:
+				printf("--");
+				break;
+			case MUL:
+				printf("*");
+				break;
+			case DIV:
+				printf("/");
+				break;
+			case MOD:
+				printf("%%");
+				break;
+			case POW:
+				printf("^");
+				break;
+		}
+	} else if (token.type == LBRACKET) {
+		printf("(");
+	} else if (token.type == RBRACKET) {
+		printf(")");
+	} else {
+		printf("BAD TOKEN");
+	}
+}
+	

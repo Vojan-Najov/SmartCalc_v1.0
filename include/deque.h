@@ -1,59 +1,60 @@
 #ifndef _SMARTCALC_DEQUE_H
 #define _SMARTCALC_DEQUE_H
 
-enum TOKEN {BAD_TOKEN = -1, OPERAND, VAR, UNARY_OP, BINARY_OP, LBRACKET, RBRACKET};
+enum TOKEN {BAD_TOKEN = -1, EMPTY_TOKEN = 0, NUMBER, VAR, \
+			UNARY_OP, BINARY_OP, FUNCTION, LBRACKET, RBRACKET};
+enum UNARY_OPERATOR {MINUS, PLUS};
+enum BINARY_OPERATOR {ADD = 0, SUB = 1, MUL = 2, DIV = 3, MOD = 4, POW = 5};
+enum FUNCTION {COS, SIN, TAN, ACOS, ASIN, ATAN, SQRT, LN, LOG};
 
-enum UNARY_OPERATOR {MINUS, PLUS, COS, SIN, TAN, ACOS, ASIN, ATAN, SQRT, LN, LOG};
-
-enum BINARY_OPERATOR {ADD, SUB, MULT, DIV, MOD, POW};
-
-typedef union u_content {
-	double operand;
-	enum UNARY_OPERATOR unary_op;
-	enum BINARY_OPERATOR binary_op;
-} content_t;
-
-typedef struct s_data {
+typedef struct token_s {
 	int type;
-	content_t content;
-} data_t;
+	union {
+		double num;
+		enum UNARY_OPERATOR unary_op;
+		enum BINARY_OPERATOR binary_op;
+		enum FUNCTION func;
+	} value;
+} token_t;
 
 typedef struct node {
 	struct node *prev;
 	struct node *next;
-	data_t data;
+	token_t token;
 } node_t;
 
 typedef struct deque {
 	node_t *first;
 	node_t *last;
-	int (*push_back)(struct deque *, data_t *);
-	int (*push_front)(struct deque *, data_t *);
-	data_t (*pop_back)(struct deque *);
-	data_t (*pop_front)(struct deque *);
+	int (*push_back)(struct deque *, token_t *);
+	int (*push_front)(struct deque *, token_t *);
+	token_t (*pop_back)(struct deque *);
+	token_t (*pop_front)(struct deque *);
 	int (*is_empty)(struct deque *);
 	void (*clear)(struct deque *);
-	data_t * (*peek_back)(struct deque *);
-	data_t * (*peek_front)(struct deque *);
+	token_t *(*peek_back)(struct deque *);
+	token_t *(*peek_front)(struct deque *);
 } deque_t;
 
-int init_deque(deque_t **deq);
+deque_t *create_deque(void);
 
-int deque_push_back(deque_t *this, data_t *data);
+int deque_push_back(deque_t *this, token_t *data);
 
-int deque_push_front(deque_t *this, data_t *data);
+int deque_push_front(deque_t *this, token_t *data);
 
-data_t deque_pop_back(deque_t *this);
+token_t deque_pop_back(deque_t *this);
 
-data_t deque_pop_front(deque_t *this);
+token_t deque_pop_front(deque_t *this);
 
 int deque_is_empty(deque_t *this);
 
 void deque_clear(deque_t *this);
 
-data_t *deque_peek_back(deque_t *this);
+token_t *deque_peek_back(deque_t *this);
 
-data_t *deque_peek_front(deque_t *this);
+token_t *deque_peek_front(deque_t *this);
+
+void print_token(token_t token);
 
 void deque_print(deque_t *this);
 
