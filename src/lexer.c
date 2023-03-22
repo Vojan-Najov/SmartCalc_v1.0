@@ -1,145 +1,142 @@
 #include "lexer.h"
+#include "error.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-static int get_token(const char *str, content_t *content, const char **endptr);
-static int get_symbolic_operator(char c, content_t *content, int prev_type);
-static int get_functional_operator(const char *str, content_t *content, const char **endptr);
+static void get_token(const char *str, token_t *token, \
+		  			  int prev_token_type, const char **endptr);
+static void get_symbolic_operator(char c, token_t *token, int prev_token_type);
+static const char *get_functional_operator(const char *str, token_t *token);
 
 deque_t *lexer(const char *str) {
-	deque_t *tokens;
-	data_t data = {0};
-	int status = 0;
+	deque_t *lexems;
+	token_t token;
+	int err_status = 0;
 
-	status = init_deque(&tokens);
-	if (!status) {
-		while (*str && data.type != BAD_TOKEN) {
-			data.type = get_token(str, &data.content, &str);
-			if (data.type != BAD_TOKEN) {
-				status = tokens->push_back(tokens, &data);
-				if (status) {
-					tokens->clear(tokens);
-					free(tokens);
-					perror("smartcalc");
-					exit(EXIT_FAILURE);
-				}
+	token.type = EMPTY_TOKEN;
+	lexems = create_deque();
+	if (lexems == NULL) {
+		error_create_deque();
+	}
+	while (*str && lexems != NULL) {
+		get_token(str, &token, token.type, &str);
+		if (token.type == BAD_TOKEN) {
+			error_bad_token(&lexems);
+		} else if (token.type != EMPTY_TOKEN) {
+			err_status = lexems->push_back(lexems, &token);
+			if (err_status) {
+				error_deque_push(&lexems);
 			}
-		}
-		if (data.type == BAD_TOKEN && *str) {
-			tokens->clear(tokens);
-			free(tokens);
-			tokens = NULL;
 		}
 	}
 
-	return (tokens);
+	return (lexems);
 }
 
-static int get_token(const char *str, content_t *content, const char **endptr) {
-	enum TOKEN type = BINARY_OP;
+static void get_token(const char *str, \
+					  token_t *token, \
+					  int prev_token_type, \
+					  const char **endptr) {
 	char *endtmp;
 
-	content->operand = 0;
 	while (isspace(*str)) {
 		++str;
 	}
 	if (*str == '\0') {
-		type = BAD_TOKEN;
+		token->type = EMPTY_TOKEN;
 	} else if (*str == '(' || *str == ')') {
 		if (*str == '(') {
-			type = LBRACKET;
+			token->type = LBRACKET;
 		} else {
-			type = RBRACKET;
+			token->type = RBRACKET;
 		}
 		++str;
 	} else if (*str == 'x') {
-		type = VAR;
+		token->type = VAR;
 		++str;
 	} else if (isdigit(*str) || (*str == '.' && isdigit(*(str + 1)))) {
-		type = OPERAND;
-		content->operand = strtod(str, &endtmp);
+		token->type = NUMBER;
+		token->value.num = strtod(str, &endtmp);
 		str = endtmp;
-	} else if (strchr("-+*/%^", *str) != NULL) {
-		type = get_symbolic_operator(*str, content, type);
+	} else if (strchr("-+*/:%^", *str) != NULL) {
+		get_symbolic_operator(*str, token, prev_token_type);
 		++str;
 	} else {
-		type = get_functional_operator(str, content, &str);
+		str = get_functional_operator(str, token);
 	}
 
 	*endptr = str;
-
-	return (type);
 }
 
-static int get_symbolic_operator(char c, content_t *content, int prev_type) {
-	enum TOKEN type = BINARY_OP;
-
+static void get_symbolic_operator(char c, token_t *token, int prev_token_type) {
+	token->type = BINARY_OP;
 	if (c == '-') {
-		if (prev_type == OPERAND || prev_type == VAR || prev_type == RBRACKET) {
-			content->binary_op = SUB;
+		if (prev_token_type == NUMBER || \
+			prev_token_type == VAR || \
+			prev_token_type == RBRACKET || \
+			prev_token_type == EMPTY_TOKEN) {
+			token->value.binary_op = SUB;
 		} else {
-			type = UNARY_OP;
-			content->unary_op = MINUS;
+			token->type = UNARY_OP;
+			token->value.unary_op = MINUS;
 		}
 	} else if (c == '+') {
-		if (prev_type == OPERAND || prev_type == VAR || prev_type == RBRACKET) {
-			content->binary_op = ADD;
+		if (prev_token_type == NUMBER || \
+			prev_token_type == VAR || \
+			prev_token_type == RBRACKET || \
+			prev_token_type == EMPTY_TOKEN) {
+			token->value.binary_op = ADD;
 		} else {
-			type = UNARY_OP;
-			content->unary_op = PLUS;
+			token->type = UNARY_OP;
+			token->value.unary_op = PLUS;
 		}
 	} else if (c == '*') {
-		content->binary_op = MULT;
-	} else if (c == '/') {
-		content->binary_op = DIV;
+		token->value.binary_op = MUL;
+	} else if (c == '/' || c == ':') {
+		token->value.binary_op = DIV;
 	} else if (c == '%') {
-		content->binary_op = MOD;
+		token->value.binary_op = MOD;
 	} else if (c == '^') {
-		content->binary_op = POW;
+		token->value.binary_op = POW;
 	} else {
-		type = BAD_TOKEN;
+		token->type = BAD_TOKEN;
 	}
-
-	return (type);
 } 
 
-static int get_functional_operator(const char *str, content_t *content, const char **endptr) {
-	enum TOKEN type = UNARY_OP;
-
+static const char *get_functional_operator(const char *str, token_t *token) {
+	token->type = FUNCTION;
 	if (strncmp(str, "sin", 3) == 0) {
-		content->unary_op = SIN;
+		token->value.func = SIN;
 		str += 3;
 	} else if (strncmp(str, "cos", 3) == 0) {
-		content->unary_op = COS;
+		token->value.func = COS;
 		str += 3;
 	} else if (strncmp(str, "tan", 3) == 0) {
-		content->unary_op = TAN;
+		token->value.func = TAN;
 		str += 3;
 	} else if (strncmp(str, "asin", 4) == 0) {
-		content->unary_op = ASIN;
+		token->value.func = ASIN;
 		str += 4;
 	} else if (strncmp(str, "acos", 4) == 0) {
-		content->unary_op = ACOS;
+		token->value.func = ACOS;
 		str += 4;
 	} else if (strncmp(str, "atan", 4) == 0) {
-		content->unary_op = ATAN;
+		token->value.func = ATAN;
 		str += 4;
 	} else if (strncmp(str, "sqrt", 4) == 0) {
-		content->unary_op = SQRT;
+		token->value.func = SQRT;
 		str += 4;
 	} else if (strncmp(str, "ln", 2) == 0) {
-		content->unary_op = LN;
+		token->value.func = LN;
 		str += 2;
 	} else if (strncmp(str, "log", 3) == 0) {
-		content->unary_op = LOG;
+		token->value.func = LOG;
 		str += 3;
 	} else {
-		type = BAD_TOKEN;
+		token->type = BAD_TOKEN;
 	}
 
-	*endptr = str;
-
-	return (type);
+	return (str);
 }
