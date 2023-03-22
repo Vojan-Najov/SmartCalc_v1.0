@@ -4,6 +4,7 @@
 #include "deque.h"
 #include "lexer.h"
 #include "parser.h"
+#include "calculator.h"
 
 int main() {
 	ssize_t nread;
@@ -28,8 +29,9 @@ int main() {
 				deque_t *rpn = parser(lexems);
 				printf("rpn\n");
 				deque_print(rpn);
-				deque_clear(rpn);
-				free(rpn);
+				double result;
+				calculate(rpn, &result);
+				printf("result = %f\n", result);
 			} else {
 				printf("lexems error\n");
 			}
