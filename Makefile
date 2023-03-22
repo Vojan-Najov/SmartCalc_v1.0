@@ -25,6 +25,7 @@ OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
 INCLD = $(wildcard $(INCLD_DIR)/*.h)
 #TEST_INCLD = $(wildcard $(TEST_INCLD_DIR)/*.h)
 
+LIBS = -lm
 TEST_LIBS = -lcheck -lm
 #TEST_LIBS = -lcheck -lm -lsubunit
 
@@ -38,7 +39,7 @@ CFLAGS = -Wall -Wextra -Werror -std=c11 -Wpedantic -D_GNU_SOURCE
 #GCOV_FLAGS = -fprofile-arcs -ftest-coverage -g -O0
 
 $(NAME): $(OBJ)
-	$(CC) -o $@ $(OBJ)
+	$(CC) -o $@ $(OBJ) $(LIBS)
 
 all: $(NAME)
 
