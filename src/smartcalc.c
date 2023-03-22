@@ -16,44 +16,26 @@ int main() {
 		exit(EXIT_FAILURE);
 	}
 
-	deque_t *deq;
-	init_deque(&deq);
-	for (int i = 0; i < 10; ++i) {
-		data_t d = {0};
-		deq->push_back(deq, &d);
-	}
-	for (int i = 0; i < 10; ++i) {
-		data_t d = {0};
-		deq->push_front(deq, &d);
-	}
-	for (int i = 0; i < 5; ++i) {
-		data_t d = deq->pop_front(deq);
-		(void) d;
-	}
-	for (int i = 0; i < 5; ++i) {
-		data_t d = deq->pop_back(deq);
-		(void) d;
-	}
-	deq->clear(deq);
-
-	free(deq);
-
-	do {
-		nread = getline(&str, &n, stdin);
+	nread = getline(&str, &n, stdin);
+	while (nread > 0) {
 		ptr = strchr(str, '\n');
 		if (ptr != NULL) {
 			*ptr = '\0';
-			fprintf(stdout, "%s\n", str);
 			deque_t *lexems = lexer(str);
 			if (lexems) {
+				printf("lexems\n");
 				deque_print(lexems);
 				deque_t *rpn = parser(lexems);
+				printf("rpn\n");
 				deque_print(rpn);
 				deque_clear(rpn);
 				free(rpn);
+			} else {
+				printf("lexems error\n");
 			}
 		}
-	} while (nread > 0);
+		nread = getline(&str, &n, stdin);
+	}
 
 	free(str);
 
