@@ -61,3 +61,24 @@ int error_parser_bad_bracket(deque_t *lexems, deque_t *stack, deque_t **rpn) {
 
 	return (print_error("unpaired brackets"));
 }
+
+int error_calculate_alloc(deque_t *stack, deque_t *rpn) {
+	if (stack != NULL) {
+		stack->clear(stack);
+		free(stack);
+	}
+	rpn->clear(rpn);
+	free(rpn);
+
+	return (print_error("memory error: bad allocation"));
+}
+
+int error_calculate_bad_token(deque_t *stack, deque_t *rpn) {
+	stack->clear(stack);
+	free(stack);
+	rpn->clear(rpn);
+	free(rpn);
+
+	print_error("memory error: syntax error");
+	return (SMARTCALC_BAD_TOKEN);
+}
