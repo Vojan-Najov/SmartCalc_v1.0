@@ -1,113 +1,100 @@
 #include "parser.h"
+#include "error.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-int PRIORITY_CORRECT(int o1, int o2) {
+int check_priority(token_t *token1, token_t *token2) {
+	int o1, o2;
+	enum ASSOCIATIVITY {LEFT, RIGHT};
 	static int priority[] = {
-		1, // ADD
-		1, // SUB
-		2, // MULT
-		2, // DIV
-		2, // MOD
-		3, // POW
+		2, // ADD
+		2, // SUB
+		3, // MUL
+		3, // DIV
+		3, // MOD
+		4, // POW
 	};
+	static int associativity[] = {
+		LEFT, // ADD
+		LEFT, // SUB
+		LEFT, // MUL
+		LEFT, // DIV
+		LEFT, // MOD
+		RIGHT, // POW
+	};
+	int ret = 0;
 
-	printf("prior = %d\n",o1);
-	printf("prior = %d\n",o2);
-	printf("prior = %d\n",priority[o1]);
-	printf("prior = %d\n",priority[o2]);
-	printf("prior = %d\n",(priority[o2] >= priority[o1]));
-	return (priority[o2] >= priority[o1]);
+	if (token2->type == BINARY_OP) {
+		o1 = token1->value.binary_op;
+		o2 = token2->value.binary_op;
+		ret = priority[o2] > priority[o1] || \
+			  (priority[o2] == priority[o1] && associativity[o1] == LEFT);
+	} else if (token2->type == UNARY_OP || token2->type == FUNCTION) {
+		ret = 1;
+	}
+
+	return (ret);
 }
 
 deque_t *parser(deque_t *lexems) {
 	deque_t *rpn;
 	deque_t *stack;
-	data_t token;
-	int status;
+	token_t token;
+	int err_status = 0;
 
-	init_deque(&rpn);
-	if (rpn == NULL) {
-		lexems->clear(lexems);
-		free(lexems);
-		perror("SmartCalc");
-		exit(EXIT_FAILURE);
-	}
-	init_deque(&stack);
-	if (rpn == NULL) {
-		lexems->clear(lexems);
-		free(lexems);
-		perror("SmartCalc");
-		exit(EXIT_FAILURE);
-	}
-	while (!lexems->is_empty(lexems)) {
-		token = lexems->pop_front(lexems);
-		if (token.type == OPERAND || token.type == VAR) {
-			status = rpn->push_back(rpn, &token);
-			if (status) {
-				exit(EXIT_FAILURE);
-			}
-		} else if (token.type == UNARY_OP || token.type == LBRACKET) {
-			status = stack->push_front(stack, &token);
-			if (status) {
-				exit(EXIT_FAILURE);
-			}
-		} else if (token.type == BINARY_OP) {
-			while (!stack->is_empty(stack) && \
-				   stack->peek_front(stack)->type != LBRACKET && \
-				   PRIORITY_CORRECT(token.content.binary_op, stack->peek_front(stack)->content.binary_op)) {
-				data_t tmp = stack->pop_front(stack);
-				status = rpn->push_back(rpn, &tmp);
-				if (status) {
-					exit(EXIT_FAILURE);
+	rpn = create_deque();
+	stack = create_deque();
+	if (rpn == NULL || stack == NULL) {
+		error_parser_alloc(lexems, stack, &rpn);
+	} else {
+		while(!err_status && !lexems->is_empty(lexems)) {
+			token = lexems->pop_front(lexems);
+			if (token.type == NUMBER || token.type == VAR) {
+				err_status = rpn->push_back(rpn, &token);
+			} else if (token.type == FUNCTION || \
+					   token.type == UNARY_OP || token.type == LBRACKET) {
+				err_status = stack->push_front(stack, &token);
+			} else if (token.type == BINARY_OP) {
+				while (!err_status && !stack->is_empty(stack) && \
+					   check_priority(&token, stack->peek_front(stack))) {
+					token_t tmp = stack->pop_front(stack);
+					err_status = rpn->push_back(rpn, &tmp);
 				}
-			}
-			status = stack->push_front(stack, &token);
-			if (status) {
-				exit(EXIT_FAILURE);
-			}
-		} else if (token.type == RBRACKET) {
-			while (!stack->is_empty(stack) && stack->peek_front(stack)->type != LBRACKET) {
-				token = stack->pop_front(stack);
-				status = rpn->push_back(rpn, &token);
-				if (status) {
-					exit(EXIT_FAILURE);
-				}
-			}
-			if (stack->is_empty(stack)) {
-				stack->clear(stack);
-				lexems->clear(lexems);
-				free(lexems); free(stack);
-				return (NULL);
-			} else {
-				stack->pop_front(stack);
-				if (!stack->is_empty(stack) && \
-					stack->peek_front(stack)->type == UNARY_OP) {
+				err_status = stack->push_front(stack, &token);
+			} else if (token.type == RBRACKET) {
+				while (!err_status && !stack->is_empty(stack) && \
+					   stack->peek_front(stack)->type != LBRACKET) {
 					token = stack->pop_front(stack);
-					status = rpn->push_back(rpn, &token);
-					if (status) {
-						exit(EXIT_FAILURE);
+					err_status = rpn->push_back(rpn, &token);
+				}
+				if (!err_status && stack->peek_front(stack)->type == LBRACKET) {
+					stack->pop_front(stack);
+					if (!stack->is_empty(stack) && \
+						(stack->peek_front(stack)->type == UNARY_OP ||
+						 stack->peek_front(stack)->type == FUNCTION)) {
+						token = stack->pop_front(stack);
+						err_status = rpn->push_back(rpn, &token);
 					}
+				} else if (!err_status) {
+					err_status = error_parser_bad_bracket(lexems, stack, &rpn);
 				}
 			}
 		}
-	}
-	while (!stack->is_empty(stack)) {
-		token = stack->pop_front(stack);
-		if (token.type == LBRACKET) {
-			stack->clear(stack);
-			lexems->clear(lexems);
-			free(lexems); free(stack);
-			return (NULL);
+		while(!err_status && !stack->is_empty(stack)) {
+			token = stack->pop_front(stack);
+			if (token.type == LBRACKET) {
+				err_status = error_parser_bad_bracket(lexems, stack, &rpn);
+			} else {
+				err_status = rpn->push_back(rpn, &token);
+			}
 		}
-		status = rpn->push_back(rpn, &token);
-		if (status) {
-			exit(EXIT_FAILURE);
+		if (err_status) {
+			error_parser_alloc(lexems, stack, &rpn);
+		} else {
+			free(stack);
+			free(lexems);
 		}
 	}
-
-	free(stack);
-	free(lexems);
 
 	return (rpn);
 }
