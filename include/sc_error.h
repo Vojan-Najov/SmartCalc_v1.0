@@ -8,7 +8,8 @@
 #define SC_BAD_BRACKET 3
 #define SC_BAD_FUNCDEF 4
 #define SC_BAD_VAR 5
-#define SC_DEVIDE_BY_ZERO 6
+#define SC_BAD_FUNC 6
+#define SC_DEVIDE_BY_ZERO 7
 
 #define SC_SUCCESS 0
 #define SC_FAILURE 1
@@ -29,6 +30,8 @@
 	"syntax error: invalid expression"
 #define SC_CALC_BAD_VAR_MESSAGE \
 	"expression: variable not set"
+#define SC_CALC_BAD_FUNC_MESSAGE \
+	"expression: function not set"
 #define SC_BAD_BRACKETS_MESSAGE \
 	"syntax error: unpaired brackets"
 #define SC_BAD_FUNCDEF_MESSAGE \
@@ -66,14 +69,6 @@ int sc_error_calc_bad_token(deque_t *stack, deque_t *rpn);
 
 int sc_error_calc_bad_var(deque_t *stack, deque_t *rpn);
 
-
-
-int error_create_deque(void);
-
-int error_deque_push(deque_t **deq);
-
-
-
-
+int sc_error_calc_bad_func(deque_t *stack, deque_t *rpn);
 
 #endif

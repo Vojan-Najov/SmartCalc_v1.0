@@ -30,9 +30,31 @@ deque_t *create_deque(void) {
 		deq->clear = &deque_clear;
 		deq->peek_back = &deque_peek_back;
 		deq->peek_front = &deque_peek_front;
+		deq->reverse = &deque_reverse;
 	}
 
 	return (deq);
+}
+
+deque_t *copy_deque(deque_t *src) {
+	deque_t *copy;
+	node_t *node;
+	int err_status = 0;
+
+	copy = create_deque();
+	if (copy != NULL) {
+		node = src->first;
+		while (!err_status && node != NULL) {
+			err_status = deque_push_back(copy, &node->token);
+			node = node->next;
+		}
+		if (err_status) {
+			deque_clear(copy);
+			copy = NULL;
+		}
+	}
+
+	return (copy);
 }
 
 int deque_push_back(deque_t *this, token_t *data) {
@@ -132,6 +154,24 @@ token_t *deque_peek_front(deque_t *this) {
 	return (&this->first->token);
 }
 
+void deque_reverse(deque_t *this) {
+	node_t *node;
+	node_t *next;
+	node_t *prev;
+
+	node = this->last;
+	while (node != NULL) {
+		next = node->prev;
+		prev = node->next;
+		node->next = next;
+		node->prev = prev;
+		node = node->next;
+	}
+	node = this->first;
+	this->first = this->last;
+	this->last = node;
+}
+
 #include <stdio.h>
 void deque_print(deque_t *this) {
 	node_t *node;
@@ -225,4 +265,3 @@ void print_token(token_t token) {
 		printf("BAD TOKEN");
 	}
 }
-	

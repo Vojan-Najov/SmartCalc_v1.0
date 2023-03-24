@@ -25,6 +25,11 @@ deque_t *parser(deque_t *lexems) {
 	} else if (err_status == SC_BAD_FUNCDEF) {
 		sc_error_parser_bad_funcdef(lexems, stack, &rpn);
 	} else {
+		if (rpn->is_empty(rpn)) {
+			// syntax error
+			rpn->clear(rpn);
+			rpn = NULL;
+		}
 		lexems->clear(lexems);
 		stack->clear(stack);
 	}

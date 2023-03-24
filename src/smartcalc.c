@@ -38,12 +38,15 @@ int main(int argc, char **argv) {
 		if (lexems == NULL) {
 			continue;
 		}
-		printf("lexems:\n");
+		printf("    lexems:\n");
 		deque_print(lexems);
-		printf("\n");
 
 		expr_type = sc_scanner(lexems);
+		printf("    scanner:\n");
+		deque_print(lexems);
 		rpn = parser(lexems);
+		printf("    parser:\n");
+		deque_print(rpn);
 		if (rpn == NULL) {
 			continue;
 		}
@@ -63,9 +66,9 @@ int main(int argc, char **argv) {
 			}
 		} else if (expr_type == SC_DEFINITION) {
 			/* FUNCTION DEFINITION */
-			//err_status = expression_simplification(rpn);
-			printf("definition F\n");
+			err_status = sc_definition(rpn);
 		}
+		printf("\n");
 	}
 
 	free(str);

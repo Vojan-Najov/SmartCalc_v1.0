@@ -151,3 +151,11 @@ int sc_error_calc_bad_var(deque_t *stack, deque_t *rpn) {
 
 	return (SC_BAD_TOKEN);
 }
+
+int sc_error_calc_bad_func(deque_t *stack, deque_t *rpn) {
+	stack->clear(stack);
+	rpn->clear(rpn);
+	sc_print_error(SC_CALC_BAD_FUNC_MESSAGE);
+
+	return (SC_BAD_TOKEN);
+}

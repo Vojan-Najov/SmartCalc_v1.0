@@ -23,6 +23,13 @@ void sc_set_variable(double x) {
 	*var_status_ptr = SC_VAR_SET;
 }
 
+void sc_unset_variable(void) {
+	int *var_status_ptr;
+
+	var_status_ptr = _get_variable_status();
+	*var_status_ptr = SC_VAR_UNSET;
+}
+
 int sc_get_variable(double *x) {
 	int *var_status_ptr;
 	double *var_ptr;

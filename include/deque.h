@@ -65,9 +65,12 @@ typedef struct deque {
 	void (*clear)(struct deque *);
 	token_t *(*peek_back)(struct deque *);
 	token_t *(*peek_front)(struct deque *);
+	void (*reverse)(struct deque *);
 } deque_t;
 
 deque_t *create_deque(void);
+
+deque_t *copy_deque(deque_t *src);
 
 int deque_push_back(deque_t *this, token_t *data);
 
@@ -84,6 +87,8 @@ void deque_clear(deque_t *this);
 token_t *deque_peek_back(deque_t *this);
 
 token_t *deque_peek_front(deque_t *this);
+
+void deque_reverse(deque_t *this);
 
 void print_token(token_t token);
 
