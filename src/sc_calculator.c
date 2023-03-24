@@ -232,6 +232,7 @@ static int sc_expr_handle_function(deque_t *stack, int function) {
 }
 
 static int sc_def_handle_function(deque_t *stack, token_t *token) {
+	deque_t *func_def;
 	token_t operand;
 	int err_status;
 
@@ -241,7 +242,17 @@ static int sc_def_handle_function(deque_t *stack, token_t *token) {
 			function_array[token->value.func](&operand);
 			err_status = stack->push_front(stack, &operand);
 		} else {
-			err_status = stack->push_front(stack, token);
+			if (token->value.func == F) {
+				if (sc_get_function(&func_def) == SC_FUNC_SET) {
+					while (!err_status && !func_def->is_empty(func_def)) {
+						token_t tmp = func_def->pop_front(func_def);
+						err_status = stack->push_front(stack, &tmp);
+					}
+					func_def->clear(func_def);
+				}
+			} else {
+				err_status = stack->push_front(stack, token);
+			}
 		}
 	} else {
 		err_status = SC_BAD_TOKEN;

@@ -45,11 +45,11 @@ int main(int argc, char **argv) {
 		printf("    scanner:\n");
 		deque_print(lexems);
 		rpn = parser(lexems);
-		printf("    parser:\n");
-		deque_print(rpn);
 		if (rpn == NULL) {
 			continue;
 		}
+		printf("    parser:\n");
+		deque_print(rpn);
 
 		if (expr_type == SC_ASSIGNMENT) {
 			/* VARIABLE ASSIGNMENT */
