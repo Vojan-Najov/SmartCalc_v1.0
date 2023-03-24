@@ -1,7 +1,7 @@
 #ifndef _SMARTCALC_ERROR_H
 #define _SMARTCALC_ERROR_H
 
-#include "deque.h"
+#include "sc_deque.h"
 
 #define SC_BAD_ALLOC 1
 #define SC_BAD_TOKEN 2

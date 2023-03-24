@@ -1,7 +1,7 @@
 #ifndef _SMARTCALC_CALCULATOR_H
 #define _SMARTCALC_CALCULATOR_H
 
-#include "deque.h"
+#include "sc_deque.h"
 
 #define SC_IS_EXPRESSION 1
 #define SC_IS_DEFINITION 0

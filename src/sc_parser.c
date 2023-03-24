@@ -1,4 +1,4 @@
-#include "parser.h"
+#include "sc_parser.h"
 #include "sc_error.h"
 #include <stdlib.h>
 #include <stdio.h>

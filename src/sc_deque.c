@@ -1,4 +1,4 @@
-#include "deque.h"
+#include "sc_deque.h"
 #include "sc_error.h"
 #include <stdlib.h>
 

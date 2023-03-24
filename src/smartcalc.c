@@ -8,8 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "deque.h"
-#include "parser.h"
+#include "sc_parser.h"
 
 static int smartcalc_gui(void);
 static int smartcalc_cli(void);

@@ -1,7 +1,7 @@
 #ifndef _SMARTCALC_SCANNER_H
 #define _SMARTCALC_SCANNER_H
 
-#include "deque.h"
+#include "sc_deque.h"
 
 #define SC_ASSIGNMENT 1
 #define SC_EXPRESSION 2
