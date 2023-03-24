@@ -48,10 +48,8 @@ void sc_error_lexer(deque_t *lexems) {
 }
 
 int sc_error_lexer_bad_token(deque_t **lexems) {
-	if (*lexems != NULL) {
-		(*lexems)->clear(*lexems);
-		*lexems = NULL;
-	}
+	(*lexems)->clear(*lexems);
+	*lexems = NULL;
 	sc_print_error(SC_LEXER_ERROR_MESSAGE);
 
 	return (SC_BAD_TOKEN);

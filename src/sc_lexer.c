@@ -3,12 +3,15 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-static void get_token(const char *str, token_t *token, \
+static void get_token(const char *str, token_t *token,
 		  			  int prev_token_type, const char **endptr);
-static void get_symbolic_operator(char c, token_t *token, int prev_token_type);
-static const char *get_functional_operator(const char *str, token_t *token);
+
+static void get_symbolic_operator(char c, token_t *token,
+								  int prev_token_type);
+
+static void get_functional_operator(const char *str, token_t *token,
+									const char **endptr);
 
 deque_t *sc_lexer(const char *str) {
 	deque_t *lexems;
@@ -20,10 +23,10 @@ deque_t *sc_lexer(const char *str) {
 	if (lexems == NULL) {
 		sc_error_lexer(lexems);
 	}
-	while (*str && lexems != NULL) {
+	while (!err_status && *str) {
 		get_token(str, &token, token.type, &str);
 		if (token.type == SC_WRONG_TOKEN) {
-			sc_error_lexer_bad_token(&lexems);
+			err_status = SC_BAD_TOKEN;
 		} else if (token.type != SC_EMPTY_TOKEN) {
 			err_status = lexems->push_back(lexems, &token);
 			if (err_status) {
@@ -31,7 +34,11 @@ deque_t *sc_lexer(const char *str) {
 			}
 		}
 	}
-	if (lexems->is_empty(lexems)) {
+	if (err_status == SC_BAD_TOKEN) {
+		sc_error_lexer_bad_token(&lexems);
+	} else if (err_status == SC_BAD_ALLOC) {
+		sc_error_lexer(lexems);
+	} else if (lexems->is_empty(lexems)) {
 		lexems->clear(lexems);
 		lexems = NULL;
 	}
@@ -39,7 +46,7 @@ deque_t *sc_lexer(const char *str) {
 	return (lexems);
 }
 
-static void get_token(const char *str, token_t *token, \
+static void get_token(const char *str, token_t *token,
 					  int prev_token_type, const char **endptr) {
 	char *endtmp;
 
@@ -48,12 +55,11 @@ static void get_token(const char *str, token_t *token, \
 	}
 	if (*str == '\0') {
 		token->type = SC_EMPTY_TOKEN;
-	} else if (*str == '(' || *str == ')') {
-		if (*str == '(') {
-			token->type = SC_LBRACKET;
-		} else {
-			token->type = SC_RBRACKET;
-		}
+	} else if (*str == '(') {
+		token->type = SC_LBRACKET;
+		++str;
+	} else if (*str == ')') {
+		token->type = SC_RBRACKET;
 		++str;
 	} else if (tolower(*str) == 'x') {
 		token->type = SC_VAR;
@@ -66,13 +72,14 @@ static void get_token(const char *str, token_t *token, \
 		get_symbolic_operator(*str, token, prev_token_type);
 		++str;
 	} else {
-		str = get_functional_operator(str, token);
+		get_functional_operator(str, token, &str);
 	}
 
 	*endptr = str;
 }
 
-static void get_symbolic_operator(char c, token_t *token, int prev_token_type) {
+static void get_symbolic_operator(char c, token_t *token,
+								  int prev_token_type) {
 	token->type = SC_BINARY_OP;
 	if (c == '-') {
 		if (prev_token_type == SC_NUMBER || \
@@ -107,7 +114,8 @@ static void get_symbolic_operator(char c, token_t *token, int prev_token_type) {
 	}
 } 
 
-static const char *get_functional_operator(const char *str, token_t *token) {
+static void get_functional_operator(const char *str, token_t *token,
+									const char **endptr) {
 	token->type = SC_FUNCTION;
 	if (strncmp(str, "sin", 3) == 0) {
 		token->value.func = SC_SIN;
@@ -147,5 +155,5 @@ static const char *get_functional_operator(const char *str, token_t *token) {
 		token->type = SC_WRONG_TOKEN;
 	}
 
-	return (str);
+	*endptr = str;
 }

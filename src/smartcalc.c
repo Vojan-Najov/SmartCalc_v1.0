@@ -1,8 +1,8 @@
 #include "sc_error.h"
 #include "sc_input.h"
+#include "sc_lexer.h"
 
 #include "sc_scanner.h"
-#include "sc_lexer.h"
 #include "sc_variable.h"
 #include "sc_calculator.h"
 #include <stdio.h>
@@ -37,11 +37,15 @@ static int smartcalc_gui(void) {
 }
 
 static int smartcalc_cli(void) {
+	deque_t *lexems;
 	int status = 0;
 	char *str = NULL;
 
 	while(sc_input_term(&str)) {
-		puts(str);
+		lexems = sc_lexer(str);
+		if (lexems == NULL) {
+			continue;
+		}
 	}
 
 	free(str);
@@ -50,8 +54,6 @@ static int smartcalc_cli(void) {
 }
 /*
 }
-	deque_t *lexems;
-	deque_t *rpn;
 	double var;
 	int expr_type;
 	int err_status;
