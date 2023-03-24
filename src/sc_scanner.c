@@ -7,16 +7,16 @@ int sc_scanner(deque_t *lexems) {
 	int status = SC_EXPRESSION;
 
 	token = lexems->pop_front(lexems);
-	if (token.type == VAR) {
+	if (token.type == SC_VAR) {
 		if (!lexems->is_empty(lexems)) {
-			if (lexems->peek_front(lexems)->type == ASSIGN) {
+			if (lexems->peek_front(lexems)->type == SC_ASSIGN) {
 				lexems->pop_front(lexems);
 				status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_ASSIGNMENT;
 			}
 		}
-	} else if (token.type == FUNCTION && token.value.func == F) {
+	} else if (token.type == SC_FUNCTION && token.value.func == SC_F) {
 		if (!lexems->is_empty(lexems)) {
-			if (lexems->peek_front(lexems)->type == ASSIGN) {
+			if (lexems->peek_front(lexems)->type == SC_ASSIGN) {
 				lexems->pop_front(lexems);
 				status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_DEFINITION;
 			}

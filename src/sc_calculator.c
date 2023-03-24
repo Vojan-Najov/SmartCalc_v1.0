@@ -109,27 +109,27 @@ static int sc_calculate_aux(deque_t *rpn, deque_t *stack, int is_expr) {
 
 	while(!err_status && !rpn->is_empty(rpn)) {
 		token = rpn->pop_front(rpn);
-		if (token.type == NUMBER) {
+		if (token.type == SC_NUMBER) {
 			err_status = stack->push_front(stack, &token);
-		} else if (token.type == VAR) {
+		} else if (token.type == SC_VAR) {
 			if (is_expr) {
 				err_status = sc_expr_handle_var(stack);
 			} else {
 				err_status = stack->push_front(stack, &token);
 			}
-		} else if (token.type == UNARY_OP) {
+		} else if (token.type == SC_UNARY_OP) {
 			if (is_expr) {
 				err_status = sc_expr_handle_unary_op(stack, token.value.unary_op);
 			} else {
 				err_status = sc_def_handle_unary_op(stack, &token);
 			}
-		} else if (token.type == FUNCTION) {
+		} else if (token.type == SC_FUNCTION) {
 			if (is_expr) {
 				err_status = sc_expr_handle_function(stack, token.value.func);
 			} else {
 				err_status = sc_def_handle_function(stack, &token);
 			}
-		} else if (token.type == BINARY_OP) {
+		} else if (token.type == SC_BINARY_OP) {
 			if (is_expr) {
 				err_status = sc_expr_handle_binary_op(stack, token.value.binary_op);
 			} else {
@@ -151,7 +151,7 @@ static int sc_calculate_aux(deque_t *rpn, deque_t *stack, int is_expr) {
 		sc_error_calc_bad_token(stack, rpn);
 	} else if (stack->is_empty(stack)) {
 		sc_error_calc_bad_token(stack, rpn);
-	} else if (is_expr && stack->peek_front(stack)->type != NUMBER) {
+	} else if (is_expr && stack->peek_front(stack)->type != SC_NUMBER) {
 		sc_error_calc_bad_token(stack, rpn);
 	}
 
@@ -164,7 +164,7 @@ static int sc_expr_handle_var(deque_t *stack) {
 	token_t token;
 
 	if (sc_get_variable(&var) == SC_VAR_SET) {
-		token.type = NUMBER;
+		token.type = SC_NUMBER;
 		token.value.num = var;
 		err_status = stack->push_front(stack, &token);
 	} else {
@@ -180,7 +180,7 @@ static int sc_expr_handle_unary_op(deque_t *stack, int unary_op) {
 
 	if (!stack->is_empty(stack)) {
 		operand = stack->pop_front(stack);
-		if (operand.type == NUMBER) {
+		if (operand.type == SC_NUMBER) {
 			unary_op_array[unary_op](&operand);
 			err_status = stack->push_front(stack, &operand);
 		} else {
@@ -198,7 +198,7 @@ static int sc_def_handle_unary_op(deque_t *stack, token_t *token) {
 	int err_status;
 
 	if (!stack->is_empty(stack)) {
-		if (stack->peek_front(stack)->type == NUMBER) {
+		if (stack->peek_front(stack)->type == SC_NUMBER) {
 			operand = stack->pop_front(stack);
 			unary_op_array[token->value.unary_op](&operand);
 			err_status = stack->push_front(stack, &operand);
@@ -218,7 +218,7 @@ static int sc_expr_handle_function(deque_t *stack, int function) {
 
 	if (!stack->is_empty(stack)) {
 		operand = stack->pop_front(stack);
-		if (operand.type == NUMBER) {
+		if (operand.type == SC_NUMBER) {
 			function_array[function](&operand);
 			err_status = stack->push_front(stack, &operand);
 		} else {
@@ -237,12 +237,13 @@ static int sc_def_handle_function(deque_t *stack, token_t *token) {
 	int err_status;
 
 	if (!stack->is_empty(stack)) {
-		if (stack->peek_front(stack)->type == NUMBER) {
+		if (stack->peek_front(stack)->type == SC_NUMBER) {
 			operand = stack->pop_front(stack);
 			function_array[token->value.func](&operand);
 			err_status = stack->push_front(stack, &operand);
 		} else {
-			if (token->value.func == F) {
+			if (token->value.func == SC_F) {
+				// bad case: throw error !!!!
 				if (sc_get_function(&func_def) == SC_FUNC_SET) {
 					while (!err_status && !func_def->is_empty(func_def)) {
 						token_t tmp = func_def->pop_front(func_def);
@@ -270,9 +271,9 @@ static int sc_expr_handle_binary_op(deque_t *stack, int binary_op) {
 		operand2 = stack->pop_front(stack);
 		if (!stack->is_empty(stack)) {
 			operand1 = stack->pop_front(stack);
-			if (operand1.type == NUMBER && operand2.type == NUMBER) {
+			if (operand1.type == SC_NUMBER && operand2.type == SC_NUMBER) {
 				binary_op_array[binary_op](&operand1, &operand2, &token);
-				if (token.type == NUMBER) {
+				if (token.type == SC_NUMBER) {
 					err_status = stack->push_front(stack, &token);
 				} else {
 					err_status = SC_DEVIDE_BY_ZERO;
@@ -298,9 +299,9 @@ static int sc_def_handle_binary_op(deque_t *stack, token_t *token) {
 		operand2 = stack->pop_front(stack);
 		if (!stack->is_empty(stack)) {
 			operand1 = stack->pop_front(stack);
-			if (operand1.type == NUMBER && operand2.type == NUMBER) {
+			if (operand1.type == SC_NUMBER && operand2.type == SC_NUMBER) {
 				binary_op_array[token->value.binary_op](&operand1, &operand2, token);
-				if (token->type == NUMBER) {
+				if (token->type == SC_NUMBER) {
 					err_status = stack->push_front(stack, token);
 				} else {
 					err_status = SC_DEVIDE_BY_ZERO;
@@ -390,39 +391,39 @@ static void sc_f(token_t *operand) {
 }
 
 static void sc_add(token_t *num1, token_t *num2, token_t *result) {
-	result->type = NUMBER;
+	result->type = SC_NUMBER;
 	result->value.num = num1->value.num + num2->value.num;
 }
 
 static void sc_sub(token_t *num1, token_t *num2, token_t *result) {
-	result->type = NUMBER;
+	result->type = SC_NUMBER;
 	result->value.num = num1->value.num - num2->value.num;
 }
 
 static void sc_mul(token_t *num1, token_t *num2, token_t *result) {
-	result->type = NUMBER;
+	result->type = SC_NUMBER;
 	result->value.num = num1->value.num * num2->value.num;
 }
 
 static void sc_div(token_t *num1, token_t *num2, token_t *result) {
 	if (fabs(num2->value.num) - 1.0e-6 > 0) {
-		result->type = NUMBER;
+		result->type = SC_NUMBER;
 		result->value.num = num1->value.num / num2->value.num;
 	} else {
-		result->type = BAD_TOKEN;
+		result->type = SC_WRONG_TOKEN;
 	}
 }
 
 static void sc_mod(token_t *num1, token_t *num2, token_t *result) {
 	if (fabs(num2->value.num) - 1.0e-6 > 0) {
-		result->type = NUMBER;
+		result->type = SC_NUMBER;
 		result->value.num = fmod(num1->value.num, num2->value.num);
 	} else {
-		result->type = BAD_TOKEN;
+		result->type = SC_WRONG_TOKEN;
 	}
 }
 
 static void sc_pow(token_t *num1, token_t *num2, token_t *result) {
-	result->type = NUMBER;
+	result->type = SC_NUMBER;
 	result->value.num = pow(num1->value.num, num2->value.num);
 }

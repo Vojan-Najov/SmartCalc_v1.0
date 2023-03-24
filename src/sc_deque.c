@@ -188,78 +188,78 @@ void deque_print(deque_t *this) {
 }
 
 void print_token(token_t token) {
-	if (token.type == NUMBER) {
+	if (token.type == SC_NUMBER) {
 		printf("%f", token.value.num);
-	} else if (token.type == VAR) {
+	} else if (token.type == SC_VAR) {
 		printf("x");
-	} else if (token.type == UNARY_OP) {
+	} else if (token.type == SC_UNARY_OP) {
 		switch (token.value.unary_op) {
-			case MINUS:
+			case SC_MINUS:
 				printf("-");
 				break;
-			case PLUS:
+			case SC_PLUS:
 				printf("+");
 				break;
 		}
-	} else if (token.type == FUNCTION) {
+	} else if (token.type == SC_FUNCTION) {
 		switch (token.value.func) {
-			case COS:
+			case SC_COS:
 				printf("cos");
 				break;
-			case SIN:
+			case SC_SIN:
 				printf("sin");
 				break;
-			case TAN:
+			case SC_TAN:
 				printf("tan");
 				break;
-			case ACOS:
+			case SC_ACOS:
 				printf("acos");
 				break;
-			case ASIN:
+			case SC_ASIN:
 				printf("asin");
 				break;
-			case ATAN:
+			case SC_ATAN:
 				printf("atan");
 				break;
-			case SQRT:
+			case SC_SQRT:
 				printf("sqrt");
 				break;
-			case LN:
+			case SC_LN:
 				printf("ln");
 				break;
-			case LOG:
+			case SC_LOG:
 				printf("log");
 				break;
-			case F:
+			case SC_F:
 				printf("f");
 				break;
 			}
-	} else if (token.type == BINARY_OP) {
+	} else if (token.type == SC_BINARY_OP) {
 		switch (token.value.binary_op) {
-			case ADD:
+			case SC_ADD:
 				printf("++");
 				break;
-			case SUB:
+			case SC_SUB:
 				printf("--");
 				break;
-			case MUL:
+			case SC_MUL:
 				printf("*");
 				break;
-			case DIV:
+			case SC_DIV:
 				printf("/");
 				break;
-			case MOD:
+			case SC_MOD:
 				printf("%%");
 				break;
-			case POW:
+			case SC_POW:
 				printf("^");
 				break;
 		}
-	} else if (token.type == LBRACKET) {
+	} else if (token.type == SC_LBRACKET) {
 		printf("(");
-	} else if (token.type == RBRACKET) {
+	} else if (token.type == SC_RBRACKET) {
 		printf(")");
-	} else if (token.type == ASSIGN) {
+	} else if (token.type == SC_ASSIGN) {
 		printf("=");
 	} else {
 		printf("BAD TOKEN");

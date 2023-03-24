@@ -2,40 +2,40 @@
 #define _SMARTCALC_DEQUE_H
 
 enum sc_token {
-	BAD_TOKEN = -1,
-	EMPTY_TOKEN = 0,
-	NUMBER,
-	VAR,
-	ASSIGN,
-	UNARY_OP,
-	BINARY_OP,
-	FUNCTION,
-	LBRACKET,
-	RBRACKET
+	SC_WRONG_TOKEN = -1,
+	SC_EMPTY_TOKEN = 0,
+	SC_ASSIGN,
+	SC_NUMBER,
+	SC_VAR,
+	SC_UNARY_OP,
+	SC_BINARY_OP,
+	SC_FUNCTION,
+	SC_LBRACKET,
+	SC_RBRACKET
 };
 enum sc_unary_operator {
-	MINUS = 0,
-	PLUS = 1
+	SC_MINUS = 0,
+	SC_PLUS = 1
 };
 enum sc_binary_operator {
-	ADD = 0,
-	SUB = 1,
-	MUL = 2,
-	DIV = 3,
-	MOD = 4,
-	POW = 5
+	SC_ADD = 0,
+	SC_SUB = 1,
+	SC_MUL = 2,
+	SC_DIV = 3,
+	SC_MOD = 4,
+	SC_POW = 5
 };
 enum sc_function {
-	COS = 0, 
-	SIN = 1,
-	TAN = 2,
-	ACOS = 3,
-	ASIN = 4,
-	ATAN = 5,
-	SQRT = 6,
-	LN = 7,
-	LOG = 8,
-	F = 9,
+	SC_COS = 0, 
+	SC_SIN = 1,
+	SC_TAN = 2,
+	SC_ACOS = 3,
+	SC_ASIN = 4,
+	SC_ATAN = 5,
+	SC_SQRT = 6,
+	SC_LN = 7,
+	SC_LOG = 8,
+	SC_F = 9,
 };
 
 typedef struct token_s {
