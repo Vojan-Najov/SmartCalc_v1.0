@@ -1,5 +1,5 @@
-#include "lexer.h"
-#include "error.h"
+#include "sc_lexer.h"
+#include "sc_error.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,7 +10,7 @@ static void get_token(const char *str, token_t *token, \
 static void get_symbolic_operator(char c, token_t *token, int prev_token_type);
 static const char *get_functional_operator(const char *str, token_t *token);
 
-deque_t *lexer(const char *str) {
+deque_t *sc_lexer(const char *str) {
 	deque_t *lexems;
 	token_t token;
 	int err_status = 0;
@@ -18,27 +18,29 @@ deque_t *lexer(const char *str) {
 	token.type = EMPTY_TOKEN;
 	lexems = create_deque();
 	if (lexems == NULL) {
-		error_create_deque();
+		sc_error_lexer(lexems);
 	}
 	while (*str && lexems != NULL) {
 		get_token(str, &token, token.type, &str);
 		if (token.type == BAD_TOKEN) {
-			error_bad_token(&lexems);
+			sc_error_lexer_bad_token(&lexems);
 		} else if (token.type != EMPTY_TOKEN) {
 			err_status = lexems->push_back(lexems, &token);
 			if (err_status) {
-				error_deque_push(&lexems);
+				sc_error_lexer(lexems);
 			}
 		}
+	}
+	if (lexems->is_empty(lexems)) {
+		lexems->clear(lexems);
+		lexems = NULL;
 	}
 
 	return (lexems);
 }
 
-static void get_token(const char *str, \
-					  token_t *token, \
-					  int prev_token_type, \
-					  const char **endptr) {
+static void get_token(const char *str, token_t *token, \
+					  int prev_token_type, const char **endptr) {
 	char *endtmp;
 
 	while (isspace(*str)) {
@@ -53,14 +55,14 @@ static void get_token(const char *str, \
 			token->type = RBRACKET;
 		}
 		++str;
-	} else if (*str == 'x') {
+	} else if (tolower(*str) == 'x') {
 		token->type = VAR;
 		++str;
 	} else if (isdigit(*str) || (*str == '.' && isdigit(*(str + 1)))) {
 		token->type = NUMBER;
 		token->value.num = strtod(str, &endtmp);
 		str = endtmp;
-	} else if (strchr("-+*/:%^", *str) != NULL) {
+	} else if (strchr("-+*/:%^=", *str) != NULL) {
 		get_symbolic_operator(*str, token, prev_token_type);
 		++str;
 	} else {
@@ -75,8 +77,7 @@ static void get_symbolic_operator(char c, token_t *token, int prev_token_type) {
 	if (c == '-') {
 		if (prev_token_type == NUMBER || \
 			prev_token_type == VAR || \
-			prev_token_type == RBRACKET || \
-			prev_token_type == EMPTY_TOKEN) {
+			prev_token_type == RBRACKET) {
 			token->value.binary_op = SUB;
 		} else {
 			token->type = UNARY_OP;
@@ -85,8 +86,7 @@ static void get_symbolic_operator(char c, token_t *token, int prev_token_type) {
 	} else if (c == '+') {
 		if (prev_token_type == NUMBER || \
 			prev_token_type == VAR || \
-			prev_token_type == RBRACKET || \
-			prev_token_type == EMPTY_TOKEN) {
+			prev_token_type == RBRACKET) {
 			token->value.binary_op = ADD;
 		} else {
 			token->type = UNARY_OP;
@@ -100,6 +100,8 @@ static void get_symbolic_operator(char c, token_t *token, int prev_token_type) {
 		token->value.binary_op = MOD;
 	} else if (c == '^') {
 		token->value.binary_op = POW;
+	} else if (c == '=') {
+		token->type = ASSIGN;
 	} else {
 		token->type = BAD_TOKEN;
 	}
@@ -134,6 +136,13 @@ static const char *get_functional_operator(const char *str, token_t *token) {
 	} else if (strncmp(str, "log", 3) == 0) {
 		token->value.func = LOG;
 		str += 3;
+	} else if (strncmp(str, "mod", 3) == 0) {
+		token->type = BINARY_OP;
+		token->value.binary_op = MOD;
+		str += 3;
+	} else if (tolower(*str) == 'f') {
+		token->value.func = F;
+		str += 1;
 	} else {
 		token->type = BAD_TOKEN;
 	}

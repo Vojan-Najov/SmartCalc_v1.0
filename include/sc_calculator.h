@@ -1,6 +1,8 @@
 #ifndef _SMARTCALC_CALCULATOR_H
 #define _SMARTCALC_CALCULATOR_H
 
-int calculate(deque_t *rpn, double *result);
+#include "deque.h"
+
+int sc_calculate(deque_t *rpn, double *result);
 
 #endif

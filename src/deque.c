@@ -1,3 +1,4 @@
+#include "sc_error.h"
 #include "deque.h"
 #include <stdlib.h>
 
@@ -36,7 +37,7 @@ deque_t *create_deque(void) {
 
 int deque_push_back(deque_t *this, token_t *data) {
 	node_t *node;
-	int status = 0;
+	int status = SC_SUCCESS;
 
 	node = create_node(data);
 	if (node != NULL) {
@@ -48,7 +49,7 @@ int deque_push_back(deque_t *this, token_t *data) {
 			this->last = node;
 		}
 	} else {
-		status = 1;
+		status = SC_BAD_ALLOC;
 	}
 
 	return (status);
@@ -56,7 +57,7 @@ int deque_push_back(deque_t *this, token_t *data) {
 
 int deque_push_front(deque_t *this, token_t *data) {
 	node_t *node;
-	int status = 0;
+	int status = SC_SUCCESS;
 
 	node = create_node(data);
 	if (node != NULL) {
@@ -68,7 +69,7 @@ int deque_push_front(deque_t *this, token_t *data) {
 			this->first = node;
 		}
 	} else {
-		status = 1;
+		status = SC_BAD_ALLOC;
 	}
 
 	return (status);
@@ -120,6 +121,7 @@ void deque_clear(deque_t *this) {
 		this->first = tmp->next;
 		free(tmp);
 	}
+	free(this);
 }
 
 token_t *deque_peek_back(deque_t *this) {
@@ -188,6 +190,9 @@ void print_token(token_t token) {
 			case LOG:
 				printf("log");
 				break;
+			case F:
+				printf("f");
+				break;
 			}
 	} else if (token.type == BINARY_OP) {
 		switch (token.value.binary_op) {
@@ -214,6 +219,8 @@ void print_token(token_t token) {
 		printf("(");
 	} else if (token.type == RBRACKET) {
 		printf(")");
+	} else if (token.type == ASSIGN) {
+		printf("=");
 	} else {
 		printf("BAD TOKEN");
 	}

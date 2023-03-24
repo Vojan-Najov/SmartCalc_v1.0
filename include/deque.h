@@ -1,20 +1,50 @@
 #ifndef _SMARTCALC_DEQUE_H
 #define _SMARTCALC_DEQUE_H
 
-enum TOKEN {BAD_TOKEN = -1, EMPTY_TOKEN = 0, NUMBER, VAR, \
-			UNARY_OP, BINARY_OP, FUNCTION, LBRACKET, RBRACKET};
-enum UNARY_OPERATOR {MINUS = 0, PLUS = 1};
-enum BINARY_OPERATOR {ADD = 0, SUB = 1, MUL = 2, DIV = 3, MOD = 4, POW = 5};
-enum FUNCTION {COS = 0, SIN = 1, TAN = 2, ACOS = 3, ASIN = 4, \
-			   ATAN = 5, SQRT = 6, LN = 7, LOG = 8};
+enum sc_token {
+	BAD_TOKEN = -1,
+	EMPTY_TOKEN = 0,
+	NUMBER,
+	VAR,
+	ASSIGN,
+	UNARY_OP,
+	BINARY_OP,
+	FUNCTION,
+	LBRACKET,
+	RBRACKET
+};
+enum sc_unary_operator {
+	MINUS = 0,
+	PLUS = 1
+};
+enum sc_binary_operator {
+	ADD = 0,
+	SUB = 1,
+	MUL = 2,
+	DIV = 3,
+	MOD = 4,
+	POW = 5
+};
+enum sc_function {
+	COS = 0, 
+	SIN = 1,
+	TAN = 2,
+	ACOS = 3,
+	ASIN = 4,
+	ATAN = 5,
+	SQRT = 6,
+	LN = 7,
+	LOG = 8,
+	F = 9,
+};
 
 typedef struct token_s {
 	int type;
 	union {
 		double num;
-		enum UNARY_OPERATOR unary_op;
-		enum BINARY_OPERATOR binary_op;
-		enum FUNCTION func;
+		enum sc_unary_operator unary_op;
+		enum sc_binary_operator binary_op;
+		enum sc_function func;
 	} value;
 } token_t;
 

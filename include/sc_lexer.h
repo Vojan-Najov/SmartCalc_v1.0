@@ -3,6 +3,6 @@
 
 #include "deque.h"
 
-deque_t *lexer(const char *str);
+deque_t *sc_lexer(const char *str);
 
 #endif
