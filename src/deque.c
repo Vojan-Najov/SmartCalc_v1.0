@@ -1,5 +1,5 @@
-#include "sc_error.h"
 #include "deque.h"
+#include "sc_error.h"
 #include <stdlib.h>
 
 static node_t *create_node(token_t *token) {

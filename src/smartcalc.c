@@ -1,4 +1,6 @@
 #include "sc_error.h"
+#include "sc_input.h"
+
 #include "sc_scanner.h"
 #include "sc_lexer.h"
 #include "sc_variable.h"
@@ -7,31 +9,54 @@
 #include <stdlib.h>
 #include <string.h>
 #include "deque.h"
-#include "input.h"
 #include "parser.h"
 
+static int smartcalc_gui(void);
+static int smartcalc_cli(void);
+
 int main(int argc, char **argv) {
+	int exit_status;
+
+	if (argc == 1) {
+		exit_status = smartcalc_gui();
+	} else if (strcmp(argv[1], "-t") == 0) {
+		exit_status = smartcalc_cli();
+	} else if (strcmp(argv[1], "-h") == 0) {
+		sc_print_usage();
+		exit_status = SC_SUCCESS;
+	} else {
+		sc_error_program_arg(argv[1]);
+		exit_status = SC_FAILURE;
+	}
+
+	return (exit_status);
+}
+
+static int smartcalc_gui(void) {
+	fprintf(stderr, "Sorry, gui not supported\n");
+	return (0);
+}
+
+static int smartcalc_cli(void) {
+	int status = 0;
+	char *str = NULL;
+
+	while(sc_input_term(&str)) {
+		puts(str);
+	}
+
+	free(str);
+
+	return(status);
+}
+/*
+}
 	deque_t *lexems;
 	deque_t *rpn;
 	double var;
 	int expr_type;
 	int err_status;
-	char *str = NULL;
 	int (*input)(char **);
-
-	if (argc == 1) {
-		// input = &sc_input_gui;
-		fprintf(stderr, "Sorry, gui not supported\n");
-		return (0);
-	} else if (strcmp(argv[1], "-t") == 0) {
-		input = &sc_input_term;		
-	} else if (strcmp(argv[1], "-h") == 0) {
-		sc_print_usage();
-		return (SC_SUCCESS);
-	} else {
-		sc_error_program_arg(argv[1]);
-		return (SC_FAILURE);
-	}
 
 	while (input(&str)) {
 		lexems = sc_lexer(str);
@@ -52,26 +77,25 @@ int main(int argc, char **argv) {
 		deque_print(rpn);
 
 		if (expr_type == SC_ASSIGNMENT) {
-			/* VARIABLE ASSIGNMENT */
+			/ VARIABLE ASSIGNMENT /
 			err_status = sc_calculate(rpn, &var);
 			if (!err_status) {
 				sc_set_variable(var);
 				printf("x = %f\n\n", var); 
 			}
 		} else if (expr_type == SC_EXPRESSION) {
-			/* EXPRESSION CALCULATION */
+			/ EXPRESSION CALCULATION /
 			err_status = sc_calculate(rpn, &var);
 			if (!err_status) {
 				printf("result = %f\n", var);
 			}
 		} else if (expr_type == SC_DEFINITION) {
-			/* FUNCTION DEFINITION */
+			/ FUNCTION DEFINITION /
 			err_status = sc_definition(rpn);
 		}
 		printf("\n");
+		printf(":> ");
 	}
+*/
 
-	free(str);
 
-	return (SC_SUCCESS);
-}
