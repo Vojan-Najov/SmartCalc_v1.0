@@ -1,14 +1,13 @@
 #include "sc_error.h"
 #include "sc_input.h"
 #include "sc_lexer.h"
-
 #include "sc_scanner.h"
-#include "sc_variable.h"
+#include "sc_parser.h"
 #include "sc_calculator.h"
+#include "sc_variable.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "sc_parser.h"
 
 static int smartcalc_gui(void);
 static int smartcalc_cli(void);
@@ -39,6 +38,7 @@ static int smartcalc_gui(void) {
 static int smartcalc_cli(void) {
 	sc_deque_t *lexems, *rpn;
 	int expr_type;
+	double result;
 	int status = 0;
 	char *str = NULL;
 
@@ -55,43 +55,18 @@ static int smartcalc_cli(void) {
 		if (rpn == NULL) {
 			continue;
 		}
+		if (expr_type == SC_ASSIGNMENT) {
+			sc_assignment(rpn);
+		} else if (expr_type == SC_DEFINITION) {
+			sc_definition(rpn);
+		} else if (expr_type == SC_EXPRESSION) {
+			if (sc_calculation(rpn, &result) == 0) {
+				printf("%.7f\n", result);
+			}
+		}
 	}
 
 	free(str);
 
 	return(status);
 }
-/*
-}
-	double var;
-	int err_status;
-
-		if (rpn == NULL) {
-			continue;
-		}
-		printf("    parser:\n");
-		deque_print(rpn);
-
-		if (expr_type == SC_ASSIGNMENT) {
-			/ VARIABLE ASSIGNMENT /
-			err_status = sc_calculate(rpn, &var);
-			if (!err_status) {
-				sc_set_variable(var);
-				printf("x = %f\n\n", var); 
-			}
-		} else if (expr_type == SC_EXPRESSION) {
-			/ EXPRESSION CALCULATION /
-			err_status = sc_calculate(rpn, &var);
-			if (!err_status) {
-				printf("result = %f\n", var);
-			}
-		} else if (expr_type == SC_DEFINITION) {
-			/ FUNCTION DEFINITION /
-			err_status = sc_definition(rpn);
-		}
-		printf("\n");
-		printf(":> ");
-	}
-*/
-
-

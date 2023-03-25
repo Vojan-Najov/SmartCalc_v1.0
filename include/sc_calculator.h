@@ -6,8 +6,10 @@
 #define SC_IS_EXPRESSION 1
 #define SC_IS_DEFINITION 0
 
-int sc_calculate(sc_deque_t *rpn, double *result);
+void sc_assignment(sc_deque_t *rpn);
 
-int sc_definition(sc_deque_t *rpn);
+void sc_definition(sc_deque_t *rpn);
+
+int sc_calculation(sc_deque_t *rpn, double *result);
 
 #endif

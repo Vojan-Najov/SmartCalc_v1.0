@@ -58,6 +58,7 @@ typedef struct sc_token_s {
 		enum sc_unary_operator unary_op;
 		enum sc_binary_operator binary_op;
 		enum sc_function func;
+		int error;
 	} value;
 } sc_token_t;
 

@@ -27,13 +27,10 @@ static void sc_mod(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
 static void sc_pow(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
 
 static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr);
-static int sc_expr_handle_var(sc_deque_t *stack);
-static int sc_expr_handle_unary_op(sc_deque_t *stack, int unary_op);
-static int sc_def_handle_unary_op(sc_deque_t *stack, sc_token_t *token);
-static int sc_expr_handle_function(sc_deque_t *stack, int function);
-static int sc_def_handle_function(sc_deque_t *stack, sc_token_t *token);
-static int sc_expr_handle_binary_op(sc_deque_t *stack, int binary_op);
-static int sc_def_handle_binary_op(sc_deque_t *stack, sc_token_t *token);
+static int sc_handle_var(sc_deque_t *stack, sc_token_t *token, int is_expr);
+static int sc_handle_unary_op(sc_deque_t *stack, sc_token_t *token, int is_expr);
+static int sc_handle_function(sc_deque_t *stack, sc_token_t *token, int is_expr);
+static int sc_handle_binary_op(sc_deque_t *stack, sc_token_t *token, int is_expr);
 
 static void (*unary_op_array[2])(sc_token_t *) = {
 	&sc_minus,
@@ -62,42 +59,74 @@ static void (*binary_op_array[])(sc_token_t *, sc_token_t *, sc_token_t *) = {
 	&sc_pow,
 };
 
-int sc_calculate(sc_deque_t *rpn, double *result) {
+void sc_assignment(sc_deque_t *rpn) {
 	sc_deque_t *stack;
+	sc_token_t token;
 	int err_status = 0;
 
 	stack = sc_create_deque();
 	if (stack == NULL) {
-		sc_error_calc_alloc(stack, rpn);
+		sc_error_calc(stack, rpn, SC_BAD_ALLOC);
 	}
 	err_status = sc_calculate_aux(rpn, stack, SC_IS_EXPRESSION);
 	if (!err_status) {
-		*result = stack->pop_front(stack).value.num;
+		token = stack->pop_front(stack);
 		if (!stack->is_empty(stack)) {
-			sc_print_error(SC_CALC_ERROR_MESSAGE);
-			err_status = SC_BAD_TOKEN;
+			sc_print_error(SC_BAD_EXPR_MESSAGE);
+		} else {
+			sc_set_variable(token.value.num);
 		}
 		stack->clear(stack);
 		rpn->clear(rpn);
+	} else {
+		sc_error_calc(stack, rpn, err_status);
 	}
-
-	return (err_status);
 }
 
-int sc_definition(sc_deque_t *rpn) {
+void sc_definition(sc_deque_t *rpn) {
 	sc_deque_t *stack;
 	int err_status = 0;
 
 	stack = sc_create_deque();
 	if (stack == NULL) {
-		sc_error_calc_alloc(stack, rpn);
+		sc_error_calc(stack, rpn, SC_BAD_ALLOC);
 	}
 	err_status = sc_calculate_aux(rpn, stack, SC_IS_DEFINITION);
 	if (!err_status) {
 		stack->reverse(stack);
 		err_status = sc_set_function(stack);
+		if (err_status) {
+			sc_error_calc(stack, rpn, SC_BAD_ALLOC);
+		}
 		stack->clear(stack);
 		rpn->clear(rpn);
+	} else {
+		sc_error_calc(stack, rpn, err_status);
+	}
+}
+
+int sc_calculation(sc_deque_t *rpn, double *result) {
+	sc_deque_t *stack;
+	sc_token_t token;
+	int err_status = 0;
+
+	stack = sc_create_deque();
+	if (stack == NULL) {
+		sc_error_calc(stack, rpn, SC_BAD_ALLOC);
+	}
+	err_status = sc_calculate_aux(rpn, stack, SC_IS_EXPRESSION);
+	if (!err_status) {
+		token = stack->pop_front(stack);
+		if (!stack->is_empty(stack)) {
+			sc_print_error(SC_BAD_EXPR_MESSAGE);
+			err_status = SC_BAD_TOKEN;
+		} else {
+			*result = token.value.num;
+		}
+		stack->clear(stack);
+		rpn->clear(rpn);
+	} else {
+		sc_error_calc(stack, rpn, err_status);
 	}
 
 	return (err_status);
@@ -112,88 +141,48 @@ static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr) {
 		if (token.type == SC_NUMBER) {
 			err_status = stack->push_front(stack, &token);
 		} else if (token.type == SC_VAR) {
-			if (is_expr) {
-				err_status = sc_expr_handle_var(stack);
-			} else {
-				err_status = stack->push_front(stack, &token);
-			}
+			err_status = sc_handle_var(stack, &token, is_expr);
 		} else if (token.type == SC_UNARY_OP) {
-			if (is_expr) {
-				err_status = sc_expr_handle_unary_op(stack, token.value.unary_op);
-			} else {
-				err_status = sc_def_handle_unary_op(stack, &token);
-			}
+			err_status = sc_handle_unary_op(stack, &token, is_expr);
 		} else if (token.type == SC_FUNCTION) {
-			if (is_expr) {
-				err_status = sc_expr_handle_function(stack, token.value.func);
-			} else {
-				err_status = sc_def_handle_function(stack, &token);
-			}
+			err_status = sc_handle_function(stack, &token, is_expr);
 		} else if (token.type == SC_BINARY_OP) {
-			if (is_expr) {
-				err_status = sc_expr_handle_binary_op(stack, token.value.binary_op);
-			} else {
-				err_status = sc_def_handle_binary_op(stack, &token);
-			}
+			err_status = sc_handle_binary_op(stack, &token, is_expr);
 		} else {
 			err_status = SC_BAD_TOKEN;
 		}
 	}
-	if (err_status == SC_BAD_ALLOC) {
-		sc_error_calc_alloc(stack, rpn);
-	} else if (err_status == SC_DEVIDE_BY_ZERO) {
-		sc_error_calc_devide_by_zero(stack, rpn);
-	} else if (err_status == SC_BAD_VAR) {
-		sc_error_calc_bad_var(stack, rpn);
-	} else if (err_status == SC_BAD_FUNC) {
-		sc_error_calc_bad_func(stack, rpn);
-	} else if (err_status == SC_BAD_TOKEN) {
-		sc_error_calc_bad_token(stack, rpn);
-	} else if (stack->is_empty(stack)) {
-		sc_error_calc_bad_token(stack, rpn);
-	} else if (is_expr && stack->peek_front(stack)->type != SC_NUMBER) {
-		sc_error_calc_bad_token(stack, rpn);
+	if (!err_status) {
+		if (stack->is_empty(stack)) {
+			err_status = SC_BAD_TOKEN;
+		} else if (is_expr && stack->peek_front(stack)->type != SC_NUMBER) {
+			err_status = SC_BAD_TOKEN;
+		}
 	}
 
 	return (err_status);
 }
 
-static int sc_expr_handle_var(sc_deque_t *stack) {
+static int sc_handle_var(sc_deque_t *stack, sc_token_t *token, int is_expr) {
 	double var;
 	int err_status;
-	sc_token_t token;
 
-	if (sc_get_variable(&var) == SC_VAR_SET) {
-		token.type = SC_NUMBER;
-		token.value.num = var;
-		err_status = stack->push_front(stack, &token);
-	} else {
-		err_status = SC_BAD_VAR;
-	}
-
-	return (err_status);
-}
-
-static int sc_expr_handle_unary_op(sc_deque_t *stack, int unary_op) {
-	sc_token_t operand;
-	int err_status;
-
-	if (!stack->is_empty(stack)) {
-		operand = stack->pop_front(stack);
-		if (operand.type == SC_NUMBER) {
-			unary_op_array[unary_op](&operand);
-			err_status = stack->push_front(stack, &operand);
+	if (is_expr) {
+		if (sc_get_variable(&var) == SC_VAR_SET) {
+			token->type = SC_NUMBER;
+			token->value.num = var;
+			err_status = stack->push_front(stack, token);
 		} else {
-			err_status = SC_BAD_TOKEN;
+			err_status = SC_BAD_VAR;
 		}
 	} else {
-		err_status = SC_BAD_TOKEN;
+		err_status = stack->push_front(stack, token);
 	}
 
 	return (err_status);
 }
 
-static int sc_def_handle_unary_op(sc_deque_t *stack, sc_token_t *token) {
+static int sc_handle_unary_op(sc_deque_t *stack, sc_token_t *token, int is_expr) {
 	sc_token_t operand;
 	int err_status;
 
@@ -203,54 +192,8 @@ static int sc_def_handle_unary_op(sc_deque_t *stack, sc_token_t *token) {
 			unary_op_array[token->value.unary_op](&operand);
 			err_status = stack->push_front(stack, &operand);
 		} else {
-			err_status = stack->push_front(stack, token);
-		}
-	} else {
-		err_status = SC_BAD_TOKEN;
-	}
-
-	return (err_status);
-}
-
-static int sc_expr_handle_function(sc_deque_t *stack, int function) {
-	sc_token_t operand;
-	int err_status;
-
-	if (!stack->is_empty(stack)) {
-		operand = stack->pop_front(stack);
-		if (operand.type == SC_NUMBER) {
-			function_array[function](&operand);
-			err_status = stack->push_front(stack, &operand);
-		} else {
-			err_status = SC_BAD_TOKEN;
-		}
-	} else {
-		err_status = SC_BAD_TOKEN;
-	}
-
-	return (err_status);
-}
-
-static int sc_def_handle_function(sc_deque_t *stack, sc_token_t *token) {
-	sc_deque_t *func_def;
-	sc_token_t operand;
-	int err_status;
-
-	if (!stack->is_empty(stack)) {
-		if (stack->peek_front(stack)->type == SC_NUMBER) {
-			operand = stack->pop_front(stack);
-			function_array[token->value.func](&operand);
-			err_status = stack->push_front(stack, &operand);
-		} else {
-			if (token->value.func == SC_F) {
-				// bad case: throw error !!!!
-				if (sc_get_function(&func_def) == SC_FUNC_SET) {
-					while (!err_status && !func_def->is_empty(func_def)) {
-						sc_token_t tmp = func_def->pop_front(func_def);
-						err_status = stack->push_front(stack, &tmp);
-					}
-					func_def->clear(func_def);
-				}
+			if (is_expr) {
+				err_status = SC_BAD_TOKEN;
 			} else {
 				err_status = stack->push_front(stack, token);
 			}
@@ -262,27 +205,29 @@ static int sc_def_handle_function(sc_deque_t *stack, sc_token_t *token) {
 	return (err_status);
 }
 
-static int sc_expr_handle_binary_op(sc_deque_t *stack, int binary_op) {
+static int sc_handle_function(sc_deque_t *stack, sc_token_t *token, int is_expr) {
+	sc_token_t operand;
 	int err_status;
-	sc_token_t token;
-	sc_token_t operand1, operand2;
 
 	if (!stack->is_empty(stack)) {
-		operand2 = stack->pop_front(stack);
-		if (!stack->is_empty(stack)) {
-			operand1 = stack->pop_front(stack);
-			if (operand1.type == SC_NUMBER && operand2.type == SC_NUMBER) {
-				binary_op_array[binary_op](&operand1, &operand2, &token);
-				if (token.type == SC_NUMBER) {
-					err_status = stack->push_front(stack, &token);
-				} else {
-					err_status = SC_DEVIDE_BY_ZERO;
-				}
+		if (stack->peek_front(stack)->type == SC_NUMBER) {
+			operand = stack->pop_front(stack);
+			function_array[token->value.func](&operand);
+			if (operand.type == SC_WRONG_TOKEN) {
+				err_status = operand.value.error;
 			} else {
-				err_status = SC_BAD_TOKEN;
+				err_status = stack->push_front(stack, &operand);
 			}
 		} else {
-			err_status = SC_BAD_TOKEN;
+			if (is_expr) {
+				err_status = SC_BAD_TOKEN;
+			} else {
+				if (token->value.func != SC_F) {
+					err_status = stack->push_front(stack, token);
+				} else {
+					err_status = SC_RECURSIVE_FUNC;
+				}
+			}
 		}
 	} else {
 		err_status = SC_BAD_TOKEN;
@@ -291,7 +236,7 @@ static int sc_expr_handle_binary_op(sc_deque_t *stack, int binary_op) {
 	return (err_status);
 }
 
-static int sc_def_handle_binary_op(sc_deque_t *stack, sc_token_t *token) {
+static int sc_handle_binary_op(sc_deque_t *stack, sc_token_t *token, int is_expr) {
 	int err_status;
 	sc_token_t operand1, operand2;
 
@@ -301,15 +246,19 @@ static int sc_def_handle_binary_op(sc_deque_t *stack, sc_token_t *token) {
 			operand1 = stack->pop_front(stack);
 			if (operand1.type == SC_NUMBER && operand2.type == SC_NUMBER) {
 				binary_op_array[token->value.binary_op](&operand1, &operand2, token);
-				if (token->type == SC_NUMBER) {
-					err_status = stack->push_front(stack, token);
+				if (token->type == SC_WRONG_TOKEN) {
+					err_status = token->value.error;
 				} else {
-					err_status = SC_DEVIDE_BY_ZERO;
+					err_status = stack->push_front(stack, token);
 				}
 			} else {
-				err_status = stack->push_front(stack, &operand1);
-				err_status = stack->push_front(stack, &operand2);
-				err_status = stack->push_front(stack, token);
+				if (is_expr) {
+					err_status = SC_BAD_TOKEN;
+				} else {
+					err_status = stack->push_front(stack, &operand1);
+					err_status = stack->push_front(stack, &operand2);
+					err_status = stack->push_front(stack, token);
+				}
 			}
 		} else {
 			err_status = SC_BAD_TOKEN;
@@ -367,26 +316,40 @@ static void sc_log(sc_token_t *operand) {
 
 static void sc_f(sc_token_t *operand) {
 	sc_deque_t *func_def;
-	int err_status;
-	double result;
+	sc_deque_t *stack;
 	double var;
+	int err_status = 0;
 	int var_status = SC_VAR_UNSET;
 
-	err_status = sc_get_function(&func_def);
-	if (func_def != NULL) {
-		if (sc_get_variable(&var) == SC_VAR_SET) {
-			var_status = SC_VAR_SET;
+	stack = sc_create_deque();
+	if (stack != NULL) {
+		err_status = sc_get_function(&func_def);
+		if (!err_status) {
+			if (sc_get_variable(&var) == SC_VAR_SET) {
+				var_status = SC_VAR_SET;
+			}
+			sc_set_variable(operand->value.num);
+			err_status = sc_calculate_aux(func_def, stack, SC_IS_EXPRESSION);
+			if (!err_status) {
+				*operand = stack->pop_front(stack);
+				if (!stack->is_empty(stack)) {
+					err_status = SC_BAD_TOKEN;
+				}
+			}
+			stack->clear(stack);
+			func_def->clear(func_def);
+			if (var_status == SC_VAR_UNSET) {
+				sc_unset_variable();
+			} else {
+				sc_set_variable(var);
+			}
 		}
-		sc_set_variable(operand->value.num);
-		err_status = sc_calculate(func_def, &result);
-		operand->value.num = result;
-		if (var_status == SC_VAR_UNSET) {
-			sc_unset_variable();
-		} else {
-			sc_set_variable(var);
-		}
-	} else if (!err_status){
-		err_status = SC_BAD_FUNC;
+	} else {
+		err_status = SC_BAD_ALLOC;
+	}
+	if (err_status) {
+		operand->type = SC_WRONG_TOKEN;
+		operand->value.error = err_status;
 	}
 }
 
@@ -411,6 +374,7 @@ static void sc_div(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 		result->value.num = num1->value.num / num2->value.num;
 	} else {
 		result->type = SC_WRONG_TOKEN;
+		result->value.error = SC_DEVIDE_BY_ZERO;
 	}
 }
 
@@ -420,6 +384,7 @@ static void sc_mod(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 		result->value.num = fmod(num1->value.num, num2->value.num);
 	} else {
 		result->type = SC_WRONG_TOKEN;
+		result->value.error = SC_DEVIDE_BY_ZERO;
 	}
 }
 
