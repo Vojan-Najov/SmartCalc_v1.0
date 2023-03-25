@@ -1,6 +1,16 @@
 #ifndef _SMARTCALC_DEQUE_H
 #define _SMARTCALC_DEQUE_H
 
+/*
+  The data structure is a double ended queue based on a doubly linked list.
+  Supports operations: push_front, push_back, pop_front, pop_back, is_empty,
+                       peek_front, peek_back, reverse, clear.
+  The list element is a token structure with type and value fields.
+  to initialize the deque -- the create_deque() function;
+  to copy the deque -- the copy_deque() function;
+  for debaging -- print_deque() function;
+*/
+
 enum sc_token {
 	SC_WRONG_TOKEN = -1,
 	SC_EMPTY_TOKEN = 0,
@@ -38,7 +48,7 @@ enum sc_function {
 	SC_F = 9,
 };
 
-typedef struct token_s {
+typedef struct sc_token_s {
 	int type;
 	union {
 		double num;
@@ -46,52 +56,52 @@ typedef struct token_s {
 		enum sc_binary_operator binary_op;
 		enum sc_function func;
 	} value;
-} token_t;
+} sc_token_t;
 
-typedef struct node {
-	struct node *prev;
-	struct node *next;
-	token_t token;
-} node_t;
+typedef struct sc_node {
+	struct sc_node *prev;
+	struct sc_node *next;
+	sc_token_t token;
+} sc_node_t;
 
-typedef struct deque {
-	node_t *first;
-	node_t *last;
-	int (*push_back)(struct deque *, token_t *);
-	int (*push_front)(struct deque *, token_t *);
-	token_t (*pop_back)(struct deque *);
-	token_t (*pop_front)(struct deque *);
-	int (*is_empty)(struct deque *);
-	void (*clear)(struct deque *);
-	token_t *(*peek_back)(struct deque *);
-	token_t *(*peek_front)(struct deque *);
-	void (*reverse)(struct deque *);
-} deque_t;
+typedef struct sc_deque {
+	sc_node_t *first;
+	sc_node_t *last;
+	int (*push_back)(struct sc_deque *, sc_token_t *);
+	int (*push_front)(struct sc_deque *, sc_token_t *);
+	sc_token_t (*pop_back)(struct sc_deque *);
+	sc_token_t (*pop_front)(struct sc_deque *);
+	int (*is_empty)(struct sc_deque *);
+	void (*clear)(struct sc_deque *);
+	sc_token_t *(*peek_back)(struct sc_deque *);
+	sc_token_t *(*peek_front)(struct sc_deque *);
+	void (*reverse)(struct sc_deque *);
+} sc_deque_t;
 
-deque_t *create_deque(void);
+sc_deque_t *sc_create_deque(void);
 
-deque_t *copy_deque(deque_t *src);
+sc_deque_t *sc_copy_deque(sc_deque_t *src);
 
-int deque_push_back(deque_t *this, token_t *data);
+int sc_deque_push_back(sc_deque_t *this, sc_token_t *data);
 
-int deque_push_front(deque_t *this, token_t *data);
+int sc_deque_push_front(sc_deque_t *this, sc_token_t *data);
 
-token_t deque_pop_back(deque_t *this);
+sc_token_t sc_deque_pop_back(sc_deque_t *this);
 
-token_t deque_pop_front(deque_t *this);
+sc_token_t sc_deque_pop_front(sc_deque_t *this);
 
-int deque_is_empty(deque_t *this);
+int sc_deque_is_empty(sc_deque_t *this);
 
-void deque_clear(deque_t *this);
+void sc_deque_clear(sc_deque_t *this);
 
-token_t *deque_peek_back(deque_t *this);
+sc_token_t *sc_deque_peek_back(sc_deque_t *this);
 
-token_t *deque_peek_front(deque_t *this);
+sc_token_t *sc_deque_peek_front(sc_deque_t *this);
 
-void deque_reverse(deque_t *this);
+void sc_deque_reverse(sc_deque_t *this);
 
-void print_token(token_t token);
+void sc_print_token(sc_token_t token);
 
-void deque_print(deque_t *this);
+void sc_print_deque(sc_deque_t *this);
 
 #endif

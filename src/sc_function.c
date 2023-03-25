@@ -8,21 +8,21 @@ static int *_get_function_status(void) {
 	return (&func_status);
 }
 
-static deque_t **_get_function_address(void) {
-	static deque_t *func_def = NULL;
+static sc_deque_t **_get_function_address(void) {
+	static sc_deque_t *func_def = NULL;
 
 	return (&func_def);
 }
 
-int sc_set_function(deque_t *func_def) {
+int sc_set_function(sc_deque_t *func_def) {
 	int err_status = 0;
 	int *func_status;
-	deque_t **func_ptr;
+	sc_deque_t **func_ptr;
 
 	func_status = _get_function_status();
 	func_ptr = _get_function_address();
 	sc_unset_function();
-	(*func_ptr) = copy_deque(func_def);
+	(*func_ptr) = sc_copy_deque(func_def);
 	if (*func_ptr == NULL) {
 		err_status = SC_BAD_ALLOC;
 	} else {
@@ -34,7 +34,7 @@ int sc_set_function(deque_t *func_def) {
 
 void sc_unset_function(void) {
 	int *func_status;
-	deque_t **func_ptr;
+	sc_deque_t **func_ptr;
 	
 	func_status = _get_function_status();
 	if (*func_status == SC_FUNC_SET) {
@@ -45,15 +45,15 @@ void sc_unset_function(void) {
 	}
 }
 
-int sc_get_function(deque_t **func_def) {
+int sc_get_function(sc_deque_t **func_def) {
 	int err_status = 0;
 	int *func_status;
-	deque_t **func_ptr;
+	sc_deque_t **func_ptr;
 	
 	func_status = _get_function_status();
 	if (*func_status == SC_FUNC_SET) {
 		func_ptr = _get_function_address();
-		*func_def = copy_deque(*func_ptr);
+		*func_def = sc_copy_deque(*func_ptr);
 		if (*func_def == NULL) {
 			err_status = SC_BAD_ALLOC;
 		}

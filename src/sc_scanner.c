@@ -1,9 +1,9 @@
 #include "sc_scanner.h"
 #include "sc_error.h"
 
-int sc_scanner(deque_t *lexems) {
+int sc_scanner(sc_deque_t *lexems) {
 	int err_status;
-	token_t token;
+	sc_token_t token;
 	int status = SC_EXPRESSION;
 
 	token = lexems->pop_front(lexems);

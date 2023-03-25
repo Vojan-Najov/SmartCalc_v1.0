@@ -37,7 +37,7 @@ static int smartcalc_gui(void) {
 }
 
 static int smartcalc_cli(void) {
-	deque_t *lexems;
+	sc_deque_t *lexems;
 	int status = 0;
 	char *str = NULL;
 

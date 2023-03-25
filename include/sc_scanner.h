@@ -8,6 +8,6 @@
 #define SC_DEFINITION 3
 #define SC_BAD_EXPR -1
 
-int sc_scanner(deque_t *lexems);
+int sc_scanner(sc_deque_t *lexems);
 
 #endif

@@ -6,10 +6,10 @@
 #define SC_FUNC_SET 1
 #define SC_FUNC_UNSET 0
 
-int sc_set_function(deque_t *func_def);
+int sc_set_function(sc_deque_t *func_def);
 
 void sc_unset_function(void);
 
-int sc_get_function(deque_t **func_def);
+int sc_get_function(sc_deque_t **func_def);
 
 #endif

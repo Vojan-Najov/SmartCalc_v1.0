@@ -10,6 +10,6 @@
   functions(sin(), cos(), tan(), asin(), acos(), atan(), log(), ln(), f(), F()).
 */
 
-deque_t *sc_lexer(const char *str);
+sc_deque_t *sc_lexer(const char *str);
 
 #endif

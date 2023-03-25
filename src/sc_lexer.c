@@ -4,22 +4,22 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void get_token(const char *str, token_t *token,
-		  			  int prev_token_type, const char **endptr);
+static void get_token(const char *str, sc_token_t *token,
+		  			  int prev_sc_token_type, const char **endptr);
 
-static void get_symbolic_operator(char c, token_t *token,
-								  int prev_token_type);
+static void get_symbolic_operator(char c, sc_token_t *token,
+								  int prev_sc_token_type);
 
-static void get_functional_operator(const char *str, token_t *token,
+static void get_functional_operator(const char *str, sc_token_t *token,
 									const char **endptr);
 
-deque_t *sc_lexer(const char *str) {
-	deque_t *lexems;
-	token_t token;
+sc_deque_t *sc_lexer(const char *str) {
+	sc_deque_t *lexems;
+	sc_token_t token;
 	int err_status = 0;
 
 	token.type = SC_EMPTY_TOKEN;
-	lexems = create_deque();
+	lexems = sc_create_deque();
 	if (lexems == NULL) {
 		sc_error_lexer(lexems);
 	}
@@ -46,8 +46,8 @@ deque_t *sc_lexer(const char *str) {
 	return (lexems);
 }
 
-static void get_token(const char *str, token_t *token,
-					  int prev_token_type, const char **endptr) {
+static void get_token(const char *str, sc_token_t *token,
+					  int prev_sc_token_type, const char **endptr) {
 	char *endtmp;
 
 	while (isspace(*str)) {
@@ -69,7 +69,7 @@ static void get_token(const char *str, token_t *token,
 		token->value.num = strtod(str, &endtmp);
 		str = endtmp;
 	} else if (strchr("-+*/:%^=", *str) != NULL) {
-		get_symbolic_operator(*str, token, prev_token_type);
+		get_symbolic_operator(*str, token, prev_sc_token_type);
 		++str;
 	} else {
 		get_functional_operator(str, token, &str);
@@ -78,22 +78,22 @@ static void get_token(const char *str, token_t *token,
 	*endptr = str;
 }
 
-static void get_symbolic_operator(char c, token_t *token,
-								  int prev_token_type) {
+static void get_symbolic_operator(char c, sc_token_t *token,
+								  int prev_sc_token_type) {
 	token->type = SC_BINARY_OP;
 	if (c == '-') {
-		if (prev_token_type == SC_NUMBER || \
-			prev_token_type == SC_VAR || \
-			prev_token_type == SC_RBRACKET) {
+		if (prev_sc_token_type == SC_NUMBER || \
+			prev_sc_token_type == SC_VAR || \
+			prev_sc_token_type == SC_RBRACKET) {
 			token->value.binary_op = SC_SUB;
 		} else {
 			token->type = SC_UNARY_OP;
 			token->value.unary_op = SC_MINUS;
 		}
 	} else if (c == '+') {
-		if (prev_token_type == SC_NUMBER || \
-			prev_token_type == SC_VAR || \
-			prev_token_type == SC_RBRACKET) {
+		if (prev_sc_token_type == SC_NUMBER || \
+			prev_sc_token_type == SC_VAR || \
+			prev_sc_token_type == SC_RBRACKET) {
 			token->value.binary_op = SC_ADD;
 		} else {
 			token->type = SC_UNARY_OP;
@@ -114,7 +114,7 @@ static void get_symbolic_operator(char c, token_t *token,
 	}
 } 
 
-static void get_functional_operator(const char *str, token_t *token,
+static void get_functional_operator(const char *str, sc_token_t *token,
 									const char **endptr) {
 	token->type = SC_FUNCTION;
 	if (strncmp(str, "sin", 3) == 0) {

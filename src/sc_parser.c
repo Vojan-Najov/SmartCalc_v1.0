@@ -3,16 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static int _shunting_yard_algorithm(deque_t *lexems, deque_t *rpn, deque_t *stack);
-static int _check_priority(token_t *token1, token_t *token2);
+static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack);
+static int _check_priority(sc_token_t *token1, sc_token_t *token2);
 
-deque_t *parser(deque_t *lexems) {
-	deque_t *rpn;
-	deque_t *stack;
+sc_deque_t *parser(sc_deque_t *lexems) {
+	sc_deque_t *rpn;
+	sc_deque_t *stack;
 	int err_status = 0;
 
-	rpn = create_deque();
-	stack = create_deque();
+	rpn = sc_create_deque();
+	stack = sc_create_deque();
 	if (rpn == NULL || stack == NULL) {
 		sc_error_parser_alloc(lexems, rpn, stack);
 	}
@@ -37,9 +37,9 @@ deque_t *parser(deque_t *lexems) {
 	return (rpn);
 }
 
-static int _shunting_yard_algorithm(deque_t *lexems, deque_t *rpn, deque_t *stack) {
+static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack) {
 	int err_status = 0;
-	token_t token;
+	sc_token_t token;
 
 	while(!err_status && !lexems->is_empty(lexems)) {
 		token = lexems->pop_front(lexems);
@@ -57,7 +57,7 @@ static int _shunting_yard_algorithm(deque_t *lexems, deque_t *rpn, deque_t *stac
 		} else if (token.type == SC_BINARY_OP) {
 			while (!err_status && !stack->is_empty(stack) && \
 				   _check_priority(&token, stack->peek_front(stack))) {
-				token_t tmp = stack->pop_front(stack);
+				sc_token_t tmp = stack->pop_front(stack);
 				err_status = rpn->push_back(rpn, &tmp);
 			}
 			err_status = stack->push_front(stack, &token);
@@ -93,7 +93,7 @@ static int _shunting_yard_algorithm(deque_t *lexems, deque_t *rpn, deque_t *stac
 	return (err_status);
 }
 
-static int _check_priority(token_t *token1, token_t *token2) {
+static int _check_priority(sc_token_t *token1, sc_token_t *token2) {
 	int o1, o2;
 	enum sc_associativity {SC_LEFT, SC_RIGHT};
 	static int priority[] = {

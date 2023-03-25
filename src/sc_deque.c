@@ -2,10 +2,10 @@
 #include "sc_error.h"
 #include <stdlib.h>
 
-static node_t *create_node(token_t *token) {
-	node_t *node;
+static sc_node_t *sc_create_node(sc_token_t *token) {
+	sc_node_t *node;
 
-	node = (node_t *) malloc(sizeof(node_t));
+	node = (sc_node_t *) malloc(sizeof(sc_node_t));
 	if (node != NULL) {
 		node->prev = NULL;
 		node->next = NULL;
@@ -15,41 +15,41 @@ static node_t *create_node(token_t *token) {
 	return (node);
 }
 
-deque_t *create_deque(void) {
-	deque_t *deq;
+sc_deque_t *sc_create_deque(void) {
+	sc_deque_t *deq;
 
-	deq = (deque_t *) malloc(sizeof(deque_t));
+	deq = (sc_deque_t *) malloc(sizeof(sc_deque_t));
 	if (deq != NULL) {
 		deq->first = NULL;
 		deq->last = NULL;
-		deq->push_back = &deque_push_back;
-		deq->push_front = &deque_push_front;
-		deq->pop_back = &deque_pop_back;
-		deq->pop_front = &deque_pop_front;
-		deq->is_empty = &deque_is_empty;
-		deq->clear = &deque_clear;
-		deq->peek_back = &deque_peek_back;
-		deq->peek_front = &deque_peek_front;
-		deq->reverse = &deque_reverse;
+		deq->push_back = &sc_deque_push_back;
+		deq->push_front = &sc_deque_push_front;
+		deq->pop_back = &sc_deque_pop_back;
+		deq->pop_front = &sc_deque_pop_front;
+		deq->is_empty = &sc_deque_is_empty;
+		deq->clear = &sc_deque_clear;
+		deq->peek_back = &sc_deque_peek_back;
+		deq->peek_front = &sc_deque_peek_front;
+		deq->reverse = &sc_deque_reverse;
 	}
 
 	return (deq);
 }
 
-deque_t *copy_deque(deque_t *src) {
-	deque_t *copy;
-	node_t *node;
+sc_deque_t *sc_copy_deque(sc_deque_t *src) {
+	sc_deque_t *copy;
+	sc_node_t *node;
 	int err_status = 0;
 
-	copy = create_deque();
+	copy = sc_create_deque();
 	if (copy != NULL) {
 		node = src->first;
 		while (!err_status && node != NULL) {
-			err_status = deque_push_back(copy, &node->token);
+			err_status = sc_deque_push_back(copy, &node->token);
 			node = node->next;
 		}
 		if (err_status) {
-			deque_clear(copy);
+			sc_deque_clear(copy);
 			copy = NULL;
 		}
 	}
@@ -57,11 +57,11 @@ deque_t *copy_deque(deque_t *src) {
 	return (copy);
 }
 
-int deque_push_back(deque_t *this, token_t *data) {
-	node_t *node;
+int sc_deque_push_back(sc_deque_t *this, sc_token_t *data) {
+	sc_node_t *node;
 	int status = SC_SUCCESS;
 
-	node = create_node(data);
+	node = sc_create_node(data);
 	if (node != NULL) {
 		if (this->last == NULL) {
 			this->first = this->last = node;
@@ -77,11 +77,11 @@ int deque_push_back(deque_t *this, token_t *data) {
 	return (status);
 }
 
-int deque_push_front(deque_t *this, token_t *data) {
-	node_t *node;
+int sc_deque_push_front(sc_deque_t *this, sc_token_t *data) {
+	sc_node_t *node;
 	int status = SC_SUCCESS;
 
-	node = create_node(data);
+	node = sc_create_node(data);
 	if (node != NULL) {
 		if (this->first == NULL) {
 			this->first = this->last = node;
@@ -97,9 +97,9 @@ int deque_push_front(deque_t *this, token_t *data) {
 	return (status);
 }
 
-token_t deque_pop_back(deque_t *this) {
-	node_t *node;
-	token_t token;
+sc_token_t sc_deque_pop_back(sc_deque_t *this) {
+	sc_node_t *node;
+	sc_token_t token;
 
 	node = this->last;
 	if (node->prev != NULL) {
@@ -114,9 +114,9 @@ token_t deque_pop_back(deque_t *this) {
 	return (token);
 }
 
-token_t deque_pop_front(deque_t *this) {
-	node_t *node;
-	token_t token;
+sc_token_t sc_deque_pop_front(sc_deque_t *this) {
+	sc_node_t *node;
+	sc_token_t token;
 
 	node = this->first;
 	if (node->next != NULL) {
@@ -131,12 +131,12 @@ token_t deque_pop_front(deque_t *this) {
 	return (token);
 }
 
-int deque_is_empty(deque_t *this) {
+int sc_deque_is_empty(sc_deque_t *this) {
 	return (this->first == NULL);
 }
 
-void deque_clear(deque_t *this) {
-	node_t *tmp;
+void sc_deque_clear(sc_deque_t *this) {
+	sc_node_t *tmp;
 
 	while(this->first != NULL) {
 		tmp = this->first;
@@ -146,18 +146,18 @@ void deque_clear(deque_t *this) {
 	free(this);
 }
 
-token_t *deque_peek_back(deque_t *this) {
+sc_token_t *sc_deque_peek_back(sc_deque_t *this) {
 	return (&this->last->token);
 }
 
-token_t *deque_peek_front(deque_t *this) {
+sc_token_t *sc_deque_peek_front(sc_deque_t *this) {
 	return (&this->first->token);
 }
 
-void deque_reverse(deque_t *this) {
-	node_t *node;
-	node_t *next;
-	node_t *prev;
+void sc_deque_reverse(sc_deque_t *this) {
+	sc_node_t *node;
+	sc_node_t *next;
+	sc_node_t *prev;
 
 	node = this->last;
 	while (node != NULL) {
@@ -173,21 +173,21 @@ void deque_reverse(deque_t *this) {
 }
 
 #include <stdio.h>
-void deque_print(deque_t *this) {
-	node_t *node;
+void sc_print_deque(sc_deque_t *this) {
+	sc_node_t *node;
 
 	printf("deque's value:\n");
 	node = this->first;
 	while (node != NULL) {
 		printf("_");
-		token_t token = node->token;
-		print_token(token);
+		sc_token_t token = node->token;
+		sc_print_token(token);
 		printf("_\n");
 		node = node->next;
 	}
 }
 
-void print_token(token_t token) {
+void sc_print_token(sc_token_t token) {
 	if (token.type == SC_NUMBER) {
 		printf("%f", token.value.num);
 	} else if (token.type == SC_VAR) {

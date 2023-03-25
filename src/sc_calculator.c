@@ -5,42 +5,42 @@
 #include <math.h>
 #include <stdlib.h>
 
-static void sc_minus(token_t *num);
-static void sc_plus(token_t *num);
+static void sc_minus(sc_token_t *num);
+static void sc_plus(sc_token_t *num);
 
-static void sc_cos(token_t *num);
-static void sc_sin(token_t *num);
-static void sc_tan(token_t *num);
-static void sc_acos(token_t *num);
-static void sc_asin(token_t *num);
-static void sc_atan(token_t *num);
-static void sc_sqrt(token_t *num);
-static void sc_ln(token_t *num);
-static void sc_log(token_t *num);
-static void sc_f(token_t *num);
+static void sc_cos(sc_token_t *num);
+static void sc_sin(sc_token_t *num);
+static void sc_tan(sc_token_t *num);
+static void sc_acos(sc_token_t *num);
+static void sc_asin(sc_token_t *num);
+static void sc_atan(sc_token_t *num);
+static void sc_sqrt(sc_token_t *num);
+static void sc_ln(sc_token_t *num);
+static void sc_log(sc_token_t *num);
+static void sc_f(sc_token_t *num);
 
-static void sc_add(token_t *num1, token_t *num2, token_t *result);
-static void sc_sub(token_t *num1, token_t *num2, token_t *result);
-static void sc_mul(token_t *num1, token_t *num2, token_t *result);
-static void sc_div(token_t *num1, token_t *num2, token_t *result);
-static void sc_mod(token_t *num1, token_t *num2, token_t *result);
-static void sc_pow(token_t *num1, token_t *num2, token_t *result);
+static void sc_add(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
+static void sc_sub(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
+static void sc_mul(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
+static void sc_div(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
+static void sc_mod(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
+static void sc_pow(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
 
-static int sc_calculate_aux(deque_t *rpn, deque_t *stack, int is_expr);
-static int sc_expr_handle_var(deque_t *stack);
-static int sc_expr_handle_unary_op(deque_t *stack, int unary_op);
-static int sc_def_handle_unary_op(deque_t *stack, token_t *token);
-static int sc_expr_handle_function(deque_t *stack, int function);
-static int sc_def_handle_function(deque_t *stack, token_t *token);
-static int sc_expr_handle_binary_op(deque_t *stack, int binary_op);
-static int sc_def_handle_binary_op(deque_t *stack, token_t *token);
+static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr);
+static int sc_expr_handle_var(sc_deque_t *stack);
+static int sc_expr_handle_unary_op(sc_deque_t *stack, int unary_op);
+static int sc_def_handle_unary_op(sc_deque_t *stack, sc_token_t *token);
+static int sc_expr_handle_function(sc_deque_t *stack, int function);
+static int sc_def_handle_function(sc_deque_t *stack, sc_token_t *token);
+static int sc_expr_handle_binary_op(sc_deque_t *stack, int binary_op);
+static int sc_def_handle_binary_op(sc_deque_t *stack, sc_token_t *token);
 
-static void (*unary_op_array[2])(token_t *) = {
+static void (*unary_op_array[2])(sc_token_t *) = {
 	&sc_minus,
 	&sc_plus,
 };
 
-static void (*function_array[])(token_t *) = {
+static void (*function_array[])(sc_token_t *) = {
 	&sc_cos,
 	&sc_sin,
 	&sc_tan,
@@ -53,7 +53,7 @@ static void (*function_array[])(token_t *) = {
 	&sc_f,
 };
 
-static void (*binary_op_array[])(token_t *, token_t *, token_t *) = {
+static void (*binary_op_array[])(sc_token_t *, sc_token_t *, sc_token_t *) = {
 	&sc_add,
 	&sc_sub,
 	&sc_mul,
@@ -62,11 +62,11 @@ static void (*binary_op_array[])(token_t *, token_t *, token_t *) = {
 	&sc_pow,
 };
 
-int sc_calculate(deque_t *rpn, double *result) {
-	deque_t *stack;
+int sc_calculate(sc_deque_t *rpn, double *result) {
+	sc_deque_t *stack;
 	int err_status = 0;
 
-	stack = create_deque();
+	stack = sc_create_deque();
 	if (stack == NULL) {
 		sc_error_calc_alloc(stack, rpn);
 	}
@@ -84,11 +84,11 @@ int sc_calculate(deque_t *rpn, double *result) {
 	return (err_status);
 }
 
-int sc_definition(deque_t *rpn) {
-	deque_t *stack;
+int sc_definition(sc_deque_t *rpn) {
+	sc_deque_t *stack;
 	int err_status = 0;
 
-	stack = create_deque();
+	stack = sc_create_deque();
 	if (stack == NULL) {
 		sc_error_calc_alloc(stack, rpn);
 	}
@@ -103,8 +103,8 @@ int sc_definition(deque_t *rpn) {
 	return (err_status);
 }
 
-static int sc_calculate_aux(deque_t *rpn, deque_t *stack, int is_expr) {
-	token_t token;
+static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr) {
+	sc_token_t token;
 	int err_status = 0;
 
 	while(!err_status && !rpn->is_empty(rpn)) {
@@ -158,10 +158,10 @@ static int sc_calculate_aux(deque_t *rpn, deque_t *stack, int is_expr) {
 	return (err_status);
 }
 
-static int sc_expr_handle_var(deque_t *stack) {
+static int sc_expr_handle_var(sc_deque_t *stack) {
 	double var;
 	int err_status;
-	token_t token;
+	sc_token_t token;
 
 	if (sc_get_variable(&var) == SC_VAR_SET) {
 		token.type = SC_NUMBER;
@@ -174,8 +174,8 @@ static int sc_expr_handle_var(deque_t *stack) {
 	return (err_status);
 }
 
-static int sc_expr_handle_unary_op(deque_t *stack, int unary_op) {
-	token_t operand;
+static int sc_expr_handle_unary_op(sc_deque_t *stack, int unary_op) {
+	sc_token_t operand;
 	int err_status;
 
 	if (!stack->is_empty(stack)) {
@@ -193,8 +193,8 @@ static int sc_expr_handle_unary_op(deque_t *stack, int unary_op) {
 	return (err_status);
 }
 
-static int sc_def_handle_unary_op(deque_t *stack, token_t *token) {
-	token_t operand;
+static int sc_def_handle_unary_op(sc_deque_t *stack, sc_token_t *token) {
+	sc_token_t operand;
 	int err_status;
 
 	if (!stack->is_empty(stack)) {
@@ -212,8 +212,8 @@ static int sc_def_handle_unary_op(deque_t *stack, token_t *token) {
 	return (err_status);
 }
 
-static int sc_expr_handle_function(deque_t *stack, int function) {
-	token_t operand;
+static int sc_expr_handle_function(sc_deque_t *stack, int function) {
+	sc_token_t operand;
 	int err_status;
 
 	if (!stack->is_empty(stack)) {
@@ -231,9 +231,9 @@ static int sc_expr_handle_function(deque_t *stack, int function) {
 	return (err_status);
 }
 
-static int sc_def_handle_function(deque_t *stack, token_t *token) {
-	deque_t *func_def;
-	token_t operand;
+static int sc_def_handle_function(sc_deque_t *stack, sc_token_t *token) {
+	sc_deque_t *func_def;
+	sc_token_t operand;
 	int err_status;
 
 	if (!stack->is_empty(stack)) {
@@ -246,7 +246,7 @@ static int sc_def_handle_function(deque_t *stack, token_t *token) {
 				// bad case: throw error !!!!
 				if (sc_get_function(&func_def) == SC_FUNC_SET) {
 					while (!err_status && !func_def->is_empty(func_def)) {
-						token_t tmp = func_def->pop_front(func_def);
+						sc_token_t tmp = func_def->pop_front(func_def);
 						err_status = stack->push_front(stack, &tmp);
 					}
 					func_def->clear(func_def);
@@ -262,10 +262,10 @@ static int sc_def_handle_function(deque_t *stack, token_t *token) {
 	return (err_status);
 }
 
-static int sc_expr_handle_binary_op(deque_t *stack, int binary_op) {
+static int sc_expr_handle_binary_op(sc_deque_t *stack, int binary_op) {
 	int err_status;
-	token_t token;
-	token_t operand1, operand2;
+	sc_token_t token;
+	sc_token_t operand1, operand2;
 
 	if (!stack->is_empty(stack)) {
 		operand2 = stack->pop_front(stack);
@@ -291,9 +291,9 @@ static int sc_expr_handle_binary_op(deque_t *stack, int binary_op) {
 	return (err_status);
 }
 
-static int sc_def_handle_binary_op(deque_t *stack, token_t *token) {
+static int sc_def_handle_binary_op(sc_deque_t *stack, sc_token_t *token) {
 	int err_status;
-	token_t operand1, operand2;
+	sc_token_t operand1, operand2;
 
 	if (!stack->is_empty(stack)) {
 		operand2 = stack->pop_front(stack);
@@ -321,52 +321,52 @@ static int sc_def_handle_binary_op(deque_t *stack, token_t *token) {
 	return (err_status);
 }
 
-static void sc_minus(token_t *operand) {
+static void sc_minus(sc_token_t *operand) {
 	operand->value.num = -operand->value.num;
 }
 
-static void sc_plus(token_t *operand) {
+static void sc_plus(sc_token_t *operand) {
 	(void) operand;
 }
 
-static void sc_cos(token_t *operand) {
+static void sc_cos(sc_token_t *operand) {
 	operand->value.num = cos(operand->value.num);
 }
 
-static void sc_sin(token_t *operand) {
+static void sc_sin(sc_token_t *operand) {
 	operand->value.num = sin(operand->value.num);
 }
 
-static void sc_tan(token_t *operand) {
+static void sc_tan(sc_token_t *operand) {
 	operand->value.num = tan(operand->value.num);
 }
 
-static void sc_acos(token_t *operand) {
+static void sc_acos(sc_token_t *operand) {
 	operand->value.num = acos(operand->value.num);
 }
 
-static void sc_asin(token_t *operand) {
+static void sc_asin(sc_token_t *operand) {
 	operand->value.num = asin(operand->value.num);
 }
 
-static void sc_atan(token_t *operand) {
+static void sc_atan(sc_token_t *operand) {
 	operand->value.num = atan(operand->value.num);
 }
 
-static void sc_sqrt(token_t *operand) {
+static void sc_sqrt(sc_token_t *operand) {
 	operand->value.num = sqrt(operand->value.num);
 }
 
-static void sc_ln(token_t *operand) {
+static void sc_ln(sc_token_t *operand) {
 	operand->value.num = log(operand->value.num);
 }
 
-static void sc_log(token_t *operand) {
+static void sc_log(sc_token_t *operand) {
 	operand->value.num = log(operand->value.num) / log(10.0);
 }
 
-static void sc_f(token_t *operand) {
-	deque_t *func_def;
+static void sc_f(sc_token_t *operand) {
+	sc_deque_t *func_def;
 	int err_status;
 	double result;
 	double var;
@@ -390,22 +390,22 @@ static void sc_f(token_t *operand) {
 	}
 }
 
-static void sc_add(token_t *num1, token_t *num2, token_t *result) {
+static void sc_add(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 	result->type = SC_NUMBER;
 	result->value.num = num1->value.num + num2->value.num;
 }
 
-static void sc_sub(token_t *num1, token_t *num2, token_t *result) {
+static void sc_sub(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 	result->type = SC_NUMBER;
 	result->value.num = num1->value.num - num2->value.num;
 }
 
-static void sc_mul(token_t *num1, token_t *num2, token_t *result) {
+static void sc_mul(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 	result->type = SC_NUMBER;
 	result->value.num = num1->value.num * num2->value.num;
 }
 
-static void sc_div(token_t *num1, token_t *num2, token_t *result) {
+static void sc_div(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 	if (fabs(num2->value.num) - 1.0e-6 > 0) {
 		result->type = SC_NUMBER;
 		result->value.num = num1->value.num / num2->value.num;
@@ -414,7 +414,7 @@ static void sc_div(token_t *num1, token_t *num2, token_t *result) {
 	}
 }
 
-static void sc_mod(token_t *num1, token_t *num2, token_t *result) {
+static void sc_mod(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 	if (fabs(num2->value.num) - 1.0e-6 > 0) {
 		result->type = SC_NUMBER;
 		result->value.num = fmod(num1->value.num, num2->value.num);
@@ -423,7 +423,7 @@ static void sc_mod(token_t *num1, token_t *num2, token_t *result) {
 	}
 }
 
-static void sc_pow(token_t *num1, token_t *num2, token_t *result) {
+static void sc_pow(sc_token_t *num1, sc_token_t *num2, sc_token_t *result) {
 	result->type = SC_NUMBER;
 	result->value.num = pow(num1->value.num, num2->value.num);
 }

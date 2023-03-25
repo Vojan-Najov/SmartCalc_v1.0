@@ -39,7 +39,7 @@ void sc_error_input_alloc(void) {
 	exit(EXIT_FAILURE);
 }
 
-void sc_error_lexer(deque_t *lexems) {
+void sc_error_lexer(sc_deque_t *lexems) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}
@@ -47,7 +47,7 @@ void sc_error_lexer(deque_t *lexems) {
 	exit(EXIT_FAILURE);
 }
 
-int sc_error_lexer_bad_token(deque_t **lexems) {
+int sc_error_lexer_bad_token(sc_deque_t **lexems) {
 	(*lexems)->clear(*lexems);
 	*lexems = NULL;
 	sc_print_error(SC_LEXER_ERROR_MESSAGE);
@@ -55,7 +55,7 @@ int sc_error_lexer_bad_token(deque_t **lexems) {
 	return (SC_BAD_TOKEN);
 }
 
-void sc_error_scanner(deque_t *lexems) {
+void sc_error_scanner(sc_deque_t *lexems) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}
@@ -63,7 +63,7 @@ void sc_error_scanner(deque_t *lexems) {
 	exit(EXIT_FAILURE);
 }
 
-void sc_error_parser_alloc(deque_t *lexems, deque_t *rpn, deque_t *stack) {
+void sc_error_parser_alloc(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}
@@ -77,7 +77,7 @@ void sc_error_parser_alloc(deque_t *lexems, deque_t *rpn, deque_t *stack) {
 	exit(EXIT_FAILURE);
 }
 
-int sc_error_parser_bad_bracket(deque_t *lexems, deque_t *stack, deque_t **rpn) {
+int sc_error_parser_bad_bracket(sc_deque_t *lexems, sc_deque_t *stack, sc_deque_t **rpn) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}
@@ -94,7 +94,7 @@ int sc_error_parser_bad_bracket(deque_t *lexems, deque_t *stack, deque_t **rpn) 
 	return (SC_BAD_BRACKET);
 }
 
-int sc_error_parser_bad_funcdef(deque_t *lexems, deque_t *stack, deque_t **rpn) {
+int sc_error_parser_bad_funcdef(sc_deque_t *lexems, sc_deque_t *stack, sc_deque_t **rpn) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}
@@ -111,7 +111,7 @@ int sc_error_parser_bad_funcdef(deque_t *lexems, deque_t *stack, deque_t **rpn) 
 	return (SC_BAD_FUNCDEF);
 }
 
-void sc_error_calc_alloc(deque_t *stack, deque_t *rpn) {
+void sc_error_calc_alloc(sc_deque_t *stack, sc_deque_t *rpn) {
 	if (stack != NULL) {
 		stack->clear(stack);
 	}
@@ -122,7 +122,7 @@ void sc_error_calc_alloc(deque_t *stack, deque_t *rpn) {
 	exit(EXIT_FAILURE);
 }
 
-int sc_error_calc_devide_by_zero(deque_t *stack, deque_t *rpn) {
+int sc_error_calc_devide_by_zero(sc_deque_t *stack, sc_deque_t *rpn) {
 	if (stack != NULL) {
 		stack->clear(stack);
 	}
@@ -134,7 +134,7 @@ int sc_error_calc_devide_by_zero(deque_t *stack, deque_t *rpn) {
 	return (SC_DEVIDE_BY_ZERO);
 }
 
-int sc_error_calc_bad_token(deque_t *stack, deque_t *rpn) {
+int sc_error_calc_bad_token(sc_deque_t *stack, sc_deque_t *rpn) {
 	stack->clear(stack);
 	rpn->clear(rpn);
 	sc_print_error(SC_CALC_ERROR_MESSAGE);
@@ -142,7 +142,7 @@ int sc_error_calc_bad_token(deque_t *stack, deque_t *rpn) {
 	return (SC_BAD_TOKEN);
 }
 
-int sc_error_calc_bad_var(deque_t *stack, deque_t *rpn) {
+int sc_error_calc_bad_var(sc_deque_t *stack, sc_deque_t *rpn) {
 	stack->clear(stack);
 	rpn->clear(rpn);
 	sc_print_error(SC_CALC_BAD_VAR_MESSAGE);
@@ -150,7 +150,7 @@ int sc_error_calc_bad_var(deque_t *stack, deque_t *rpn) {
 	return (SC_BAD_TOKEN);
 }
 
-int sc_error_calc_bad_func(deque_t *stack, deque_t *rpn) {
+int sc_error_calc_bad_func(sc_deque_t *stack, sc_deque_t *rpn) {
 	stack->clear(stack);
 	rpn->clear(rpn);
 	sc_print_error(SC_CALC_BAD_FUNC_MESSAGE);

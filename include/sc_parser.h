@@ -3,6 +3,6 @@
 
 #include "sc_deque.h"
 
-deque_t *parser(deque_t *lexems);
+sc_deque_t *parser(sc_deque_t *lexems);
 
 #endif
