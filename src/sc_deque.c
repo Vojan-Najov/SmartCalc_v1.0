@@ -172,6 +172,7 @@ void sc_deque_reverse(sc_deque_t *this) {
 	this->last = node;
 }
 
+#ifdef SC_DEBUG
 #include <stdio.h>
 void sc_print_deque(sc_deque_t *this) {
 	sc_node_t *node;
@@ -265,3 +266,4 @@ void sc_print_token(sc_token_t token) {
 		printf("BAD TOKEN");
 	}
 }
+#endif

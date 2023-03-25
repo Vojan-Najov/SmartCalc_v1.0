@@ -3,9 +3,12 @@
 
 /*
   The data structure is a double ended queue based on a doubly linked list.
+
   Supports operations: push_front, push_back, pop_front, pop_back, is_empty,
                        peek_front, peek_back, reverse, clear.
+
   The list element is a token structure with type and value fields.
+
   to initialize the deque -- the create_deque() function;
   to copy the deque -- the copy_deque() function;
   for debaging -- print_deque() function;
@@ -100,8 +103,10 @@ sc_token_t *sc_deque_peek_front(sc_deque_t *this);
 
 void sc_deque_reverse(sc_deque_t *this);
 
+ #ifdef SC_DEBUG
 void sc_print_token(sc_token_t token);
 
 void sc_print_deque(sc_deque_t *this);
+ #endif 
 
 #endif
