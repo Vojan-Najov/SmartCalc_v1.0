@@ -8,24 +8,22 @@ int sc_scanner(sc_deque_t *lexems) {
 
 	token = lexems->pop_front(lexems);
 	if (token.type == SC_VAR) {
-		if (!lexems->is_empty(lexems)) {
-			if (lexems->peek_front(lexems)->type == SC_ASSIGN) {
-				lexems->pop_front(lexems);
-				status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_ASSIGNMENT;
-			}
+		if (!lexems->is_empty(lexems) &&
+			 lexems->peek_front(lexems)->type == SC_ASSIGN) {
+			lexems->pop_front(lexems);
+			status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_ASSIGNMENT;
 		}
 	} else if (token.type == SC_FUNCTION && token.value.func == SC_F) {
-		if (!lexems->is_empty(lexems)) {
-			if (lexems->peek_front(lexems)->type == SC_ASSIGN) {
-				lexems->pop_front(lexems);
-				status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_DEFINITION;
-			}
+		if (!lexems->is_empty(lexems) &&
+			 lexems->peek_front(lexems)->type == SC_ASSIGN) {
+			lexems->pop_front(lexems);
+			status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_DEFINITION;
 		}
 	}
 	if (status == SC_EXPRESSION) {
 		err_status = lexems->push_front(lexems, &token);
 	} else if (status == SC_BAD_EXPR) {
-		lexems->clear(lexems);
+		sc_error_scanner_bad_expr(lexems);
 	}
 	if (err_status == SC_BAD_ALLOC) {
 		sc_error_scanner(lexems);

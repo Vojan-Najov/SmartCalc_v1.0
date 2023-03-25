@@ -38,12 +38,17 @@ static int smartcalc_gui(void) {
 
 static int smartcalc_cli(void) {
 	sc_deque_t *lexems;
+	int expr_type;
 	int status = 0;
 	char *str = NULL;
 
 	while(sc_input_term(&str)) {
 		lexems = sc_lexer(str);
 		if (lexems == NULL) {
+			continue;
+		}
+		expr_type = sc_scanner(lexems);
+		if (expr_type == SC_BAD_EXPR) {
 			continue;
 		}
 	}
@@ -55,19 +60,8 @@ static int smartcalc_cli(void) {
 /*
 }
 	double var;
-	int expr_type;
 	int err_status;
-	int (*input)(char **);
 
-	while (input(&str)) {
-		lexems = sc_lexer(str);
-		if (lexems == NULL) {
-			continue;
-		}
-		printf("    lexems:\n");
-		deque_print(lexems);
-
-		expr_type = sc_scanner(lexems);
 		printf("    scanner:\n");
 		deque_print(lexems);
 		rpn = parser(lexems);

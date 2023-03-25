@@ -48,8 +48,10 @@ void sc_error_lexer(sc_deque_t *lexems) {
 }
 
 int sc_error_lexer_bad_token(sc_deque_t **lexems) {
-	(*lexems)->clear(*lexems);
-	*lexems = NULL;
+	if (lexems != NULL) {
+		(*lexems)->clear(*lexems);
+		*lexems = NULL;
+	}
 	sc_print_error(SC_LEXER_ERROR_MESSAGE);
 
 	return (SC_BAD_TOKEN);
@@ -61,6 +63,15 @@ void sc_error_scanner(sc_deque_t *lexems) {
 	}
 	sc_print_error(SC_BAD_ALLOC_MESSAGE);
 	exit(EXIT_FAILURE);
+}
+
+int sc_error_scanner_bad_expr(sc_deque_t *lexems) {
+	if (lexems != NULL) {
+		lexems->clear(lexems);
+	}
+	sc_print_error(SC_BAD_EXPR_ERROR_MESSAGE);
+
+	return (SC_BAD_TOKEN);
 }
 
 void sc_error_parser_alloc(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack) {

@@ -26,6 +26,8 @@
 	"stdin: error"
 #define SC_LEXER_ERROR_MESSAGE \
 	"syntax error: bad token"
+#define SC_BAD_EXPR_ERROR_MESSAGE \
+	"syntax error: invalid expression"
 #define SC_CALC_ERROR_MESSAGE \
 	"syntax error: invalid expression"
 #define SC_CALC_BAD_VAR_MESSAGE \
@@ -54,6 +56,8 @@ void sc_error_lexer(sc_deque_t *lexems);
 int sc_error_lexer_bad_token(sc_deque_t **lexems);
 
 void sc_error_scanner(sc_deque_t *lexems);
+
+int sc_error_scanner_bad_expr(sc_deque_t *lexems);
 
 void sc_error_parser_alloc(sc_deque_t *lexems,
 							sc_deque_t *rpn, sc_deque_t *stack);
