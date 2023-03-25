@@ -5,13 +5,13 @@
 #include <stdlib.h>
 
 static void get_token(const char *str, sc_token_t *token,
-		  			  int prev_sc_token_type, const char **endptr);
+                      int prev_sc_token_type, const char **endptr);
 
 static void get_symbolic_operator(char c, sc_token_t *token,
-								  int prev_sc_token_type);
+                                  int prev_token);
 
 static void get_functional_operator(const char *str, sc_token_t *token,
-									const char **endptr);
+                                    const char **endptr);
 
 sc_deque_t *sc_lexer(const char *str) {
 	sc_deque_t *lexems;
@@ -47,7 +47,7 @@ sc_deque_t *sc_lexer(const char *str) {
 }
 
 static void get_token(const char *str, sc_token_t *token,
-					  int prev_sc_token_type, const char **endptr) {
+					  int prev_token, const char **endptr) {
 	char *endtmp;
 
 	while (isspace(*str)) {
@@ -69,31 +69,52 @@ static void get_token(const char *str, sc_token_t *token,
 		token->value.num = strtod(str, &endtmp);
 		str = endtmp;
 	} else if (strchr("-+*/:%^=", *str) != NULL) {
-		get_symbolic_operator(*str, token, prev_sc_token_type);
+		get_symbolic_operator(*str, token, prev_token);
 		++str;
 	} else {
 		get_functional_operator(str, token, &str);
+	}
+	if ((token->type == SC_NUMBER || token->type == SC_VAR) && \
+       (prev_token == SC_NUMBER || prev_token == SC_VAR || \
+       prev_token == SC_FUNCTION || prev_token == SC_RBRACKET)) {
+		token->type = SC_WRONG_TOKEN;
+	} else if (token->type == SC_ASSIGN && \
+              prev_token != SC_VAR && prev_token != SC_FUNCTION) {
+		token->type = SC_WRONG_TOKEN;
+	} else if (token->type == SC_UNARY_OP && prev_token == SC_FUNCTION) {
+		token->type = SC_WRONG_TOKEN;
+	} else if (token->type == SC_BINARY_OP && prev_token != SC_NUMBER && \
+              prev_token != SC_VAR && prev_token != SC_RBRACKET) {
+		token->type = SC_WRONG_TOKEN;
+	} else if (token->type == SC_FUNCTION && \
+              (prev_token == SC_NUMBER || prev_token == SC_VAR || \
+              prev_token == SC_FUNCTION || prev_token == SC_RBRACKET)) {
+		token->type = SC_WRONG_TOKEN;
+	} else if (token->type == SC_LBRACKET && (prev_token == SC_NUMBER || \
+              prev_token == SC_VAR || prev_token == SC_RBRACKET)) {
+		token->type = SC_WRONG_TOKEN;
+	} else if (token->type == SC_RBRACKET && prev_token != SC_NUMBER && \
+              prev_token != SC_VAR && prev_token != SC_RBRACKET) {
+		token->type = SC_WRONG_TOKEN;
 	}
 
 	*endptr = str;
 }
 
 static void get_symbolic_operator(char c, sc_token_t *token,
-								  int prev_sc_token_type) {
+                                  int prev_token) {
 	token->type = SC_BINARY_OP;
 	if (c == '-') {
-		if (prev_sc_token_type == SC_NUMBER || \
-			prev_sc_token_type == SC_VAR || \
-			prev_sc_token_type == SC_RBRACKET) {
+		if (prev_token == SC_NUMBER || \
+           prev_token == SC_VAR || prev_token == SC_RBRACKET) {
 			token->value.binary_op = SC_SUB;
 		} else {
 			token->type = SC_UNARY_OP;
 			token->value.unary_op = SC_MINUS;
 		}
 	} else if (c == '+') {
-		if (prev_sc_token_type == SC_NUMBER || \
-			prev_sc_token_type == SC_VAR || \
-			prev_sc_token_type == SC_RBRACKET) {
+		if (prev_token == SC_NUMBER || \
+           prev_token == SC_VAR || prev_token == SC_RBRACKET) {
 			token->value.binary_op = SC_ADD;
 		} else {
 			token->type = SC_UNARY_OP;
@@ -115,7 +136,7 @@ static void get_symbolic_operator(char c, sc_token_t *token,
 } 
 
 static void get_functional_operator(const char *str, sc_token_t *token,
-									const char **endptr) {
+                                    const char **endptr) {
 	token->type = SC_FUNCTION;
 	if (strncmp(str, "sin", 3) == 0) {
 		token->value.func = SC_SIN;
