@@ -35,7 +35,7 @@ RM = rm -f
 RMDIR = rm -rf
 AR = ar rcs
 
-CFLAGS = -Wall -Wextra -Werror -std=c11 -Wpedantic
+CFLAGS = -Wall -Wextra -Werror -std=c11 -Wpedantic -DSC_DEBUG
 #GCOV_FLAGS = -fprofile-arcs -ftest-coverage -g -O0
 
 $(NAME): $(OBJ)
