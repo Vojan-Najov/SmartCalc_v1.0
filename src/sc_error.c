@@ -88,7 +88,8 @@ void sc_error_parser_alloc(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stac
 	exit(EXIT_FAILURE);
 }
 
-int sc_error_parser_bad_bracket(sc_deque_t *lexems, sc_deque_t *stack, sc_deque_t **rpn) {
+int sc_error_parser_bad_bracket(sc_deque_t *lexems,
+                                sc_deque_t *stack, sc_deque_t **rpn) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}
@@ -105,7 +106,8 @@ int sc_error_parser_bad_bracket(sc_deque_t *lexems, sc_deque_t *stack, sc_deque_
 	return (SC_BAD_BRACKET);
 }
 
-int sc_error_parser_bad_funcdef(sc_deque_t *lexems, sc_deque_t *stack, sc_deque_t **rpn) {
+int sc_error_parser_bad_funcdef(sc_deque_t *lexems,
+                                sc_deque_t *stack, sc_deque_t **rpn) {
 	if (lexems != NULL) {
 		lexems->clear(lexems);
 	}

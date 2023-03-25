@@ -37,7 +37,7 @@ static int smartcalc_gui(void) {
 }
 
 static int smartcalc_cli(void) {
-	sc_deque_t *lexems;
+	sc_deque_t *lexems, *rpn;
 	int expr_type;
 	int status = 0;
 	char *str = NULL;
@@ -51,6 +51,10 @@ static int smartcalc_cli(void) {
 		if (expr_type == SC_BAD_EXPR) {
 			continue;
 		}
+		rpn = parser(lexems);
+		if (rpn == NULL) {
+			continue;
+		}
 	}
 
 	free(str);
@@ -62,9 +66,6 @@ static int smartcalc_cli(void) {
 	double var;
 	int err_status;
 
-		printf("    scanner:\n");
-		deque_print(lexems);
-		rpn = parser(lexems);
 		if (rpn == NULL) {
 			continue;
 		}

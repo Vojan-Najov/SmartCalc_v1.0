@@ -28,16 +28,16 @@
 	"syntax error: bad token"
 #define SC_BAD_EXPR_ERROR_MESSAGE \
 	"syntax error: invalid expression"
+#define SC_BAD_BRACKETS_MESSAGE \
+	"syntax error: unpaired brackets"
+#define SC_BAD_FUNCDEF_MESSAGE \
+	"syntax error: no parentheses found near the function"
 #define SC_CALC_ERROR_MESSAGE \
 	"syntax error: invalid expression"
 #define SC_CALC_BAD_VAR_MESSAGE \
 	"expression: variable not set"
 #define SC_CALC_BAD_FUNC_MESSAGE \
 	"expression: function not set"
-#define SC_BAD_BRACKETS_MESSAGE \
-	"syntax error: unpaired brackets"
-#define SC_BAD_FUNCDEF_MESSAGE \
-	"syntax error: no parentheses found near the function"
 #define SC_DEVIDE_BY_ZERO_MESSAGE \
 	"calculation error: devide by zero"
 
@@ -60,13 +60,13 @@ void sc_error_scanner(sc_deque_t *lexems);
 int sc_error_scanner_bad_expr(sc_deque_t *lexems);
 
 void sc_error_parser_alloc(sc_deque_t *lexems,
-							sc_deque_t *rpn, sc_deque_t *stack);
+                           sc_deque_t *rpn, sc_deque_t *stack);
 
 int sc_error_parser_bad_bracket(sc_deque_t *lexems,
-								sc_deque_t *stack, sc_deque_t **rpn);
+                                sc_deque_t *stack, sc_deque_t **rpn);
 
 int sc_error_parser_bad_funcdef(sc_deque_t *lexems,
-								sc_deque_t *stack, sc_deque_t **rpn);
+                                sc_deque_t *stack, sc_deque_t **rpn);
 
 void sc_error_calc_alloc(sc_deque_t *stack, sc_deque_t *rpn);
 

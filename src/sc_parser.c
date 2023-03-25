@@ -1,9 +1,10 @@
 #include "sc_parser.h"
 #include "sc_error.h"
-#include <stdlib.h>
-#include <stdio.h>
+#include <stddef.h>
 
-static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack);
+static int _shunting_yard_algorithm(sc_deque_t *lexems,
+                                    sc_deque_t *rpn, sc_deque_t *stack);
+
 static int _check_priority(sc_token_t *token1, sc_token_t *token2);
 
 sc_deque_t *parser(sc_deque_t *lexems) {
@@ -25,11 +26,6 @@ sc_deque_t *parser(sc_deque_t *lexems) {
 	} else if (err_status == SC_BAD_FUNCDEF) {
 		sc_error_parser_bad_funcdef(lexems, stack, &rpn);
 	} else {
-		if (rpn->is_empty(rpn)) {
-			// syntax error
-			rpn->clear(rpn);
-			rpn = NULL;
-		}
 		lexems->clear(lexems);
 		stack->clear(stack);
 	}
@@ -37,7 +33,8 @@ sc_deque_t *parser(sc_deque_t *lexems) {
 	return (rpn);
 }
 
-static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack) {
+static int _shunting_yard_algorithm(sc_deque_t *lexems,
+									sc_deque_t *rpn, sc_deque_t *stack) {
 	int err_status = 0;
 	sc_token_t token;
 
@@ -47,7 +44,7 @@ static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_dequ
 			err_status = rpn->push_back(rpn, &token);
 		} else if (token.type == SC_FUNCTION) {
 			if (!lexems->is_empty(lexems) && \
-			     lexems->peek_front(lexems)->type == SC_LBRACKET) {
+               lexems->peek_front(lexems)->type == SC_LBRACKET) {
 				err_status = stack->push_front(stack, &token);
 			} else {
 				err_status = SC_BAD_FUNCDEF;
@@ -56,14 +53,14 @@ static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_dequ
 			err_status = stack->push_front(stack, &token);
 		} else if (token.type == SC_BINARY_OP) {
 			while (!err_status && !stack->is_empty(stack) && \
-				   _check_priority(&token, stack->peek_front(stack))) {
+                  _check_priority(&token, stack->peek_front(stack))) {
 				sc_token_t tmp = stack->pop_front(stack);
 				err_status = rpn->push_back(rpn, &tmp);
 			}
 			err_status = stack->push_front(stack, &token);
 		} else if (token.type == SC_RBRACKET) {
 			while (!err_status && !stack->is_empty(stack) && \
-				   stack->peek_front(stack)->type != SC_LBRACKET) {
+                  stack->peek_front(stack)->type != SC_LBRACKET) {
 				token = stack->pop_front(stack);
 				err_status = rpn->push_back(rpn, &token);
 			}
@@ -73,8 +70,8 @@ static int _shunting_yard_algorithm(sc_deque_t *lexems, sc_deque_t *rpn, sc_dequ
 				/* There is LBRACKET in the top of the stack */
 				stack->pop_front(stack);
 				if (!stack->is_empty(stack) && \
-					 (stack->peek_front(stack)->type == SC_UNARY_OP ||
-					 stack->peek_front(stack)->type == SC_FUNCTION)) {
+                   (stack->peek_front(stack)->type == SC_UNARY_OP ||
+                   stack->peek_front(stack)->type == SC_FUNCTION)) {
 					token = stack->pop_front(stack);
 					err_status = rpn->push_back(rpn, &token);
 				}
