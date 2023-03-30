@@ -36,6 +36,20 @@ sc_deque_t *sc_create_deque(void) {
 	return (deq);
 }
 
+void sc_init_deque(sc_deque_t *deq) {
+	deq->first = NULL;
+	deq->last = NULL;
+	deq->push_back = &sc_deque_push_back;
+	deq->push_front = &sc_deque_push_front;
+	deq->pop_back = &sc_deque_pop_back;
+	deq->pop_front = &sc_deque_pop_front;
+	deq->is_empty = &sc_deque_is_empty;
+	deq->clear = &sc_deque_clear;
+	deq->peek_back = &sc_deque_peek_back;
+	deq->peek_front = &sc_deque_peek_front;
+	deq->reverse = &sc_deque_reverse;
+}
+
 sc_deque_t *sc_copy_deque(sc_deque_t *src) {
 	sc_deque_t *copy;
 	sc_node_t *node;
@@ -143,7 +157,8 @@ void sc_deque_clear(sc_deque_t *this) {
 		this->first = tmp->next;
 		free(tmp);
 	}
-	free(this);
+	this->first = NULL;
+	this->last = NULL;
 }
 
 sc_token_t *sc_deque_peek_back(sc_deque_t *this) {

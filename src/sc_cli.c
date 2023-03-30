@@ -4,27 +4,34 @@
 #include "sc_parser.h"
 #include "sc_calculator.h"
 #include "sc_variable.h"
+#include "sc_error.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 
 int smartcalc_cli(void) {
-	sc_deque_t *lexems, *rpn;
+	sc_deque_t lexems, *rpn;
 	int expr_type;
 	double result;
-	int status = 0;
+	int err_status = 0;
 	char *str = NULL;
 
 	while(sc_input_term(&str)) {
-		lexems = sc_lexer(str);
-		if (lexems == NULL) {
+		sc_init_deque(&lexems);
+		err_status = sc_lexer(str, &lexems);
+		if (err_status) {
+			sc_cli_error_lexer(err_status, &lexems);
 			continue;
 		}
-		expr_type = sc_scanner(lexems);
-		if (expr_type == SC_BAD_EXPR) {
+		expr_type = sc_scanner(&lexems);
+		if (expr_type == SC_SCANNER_ERROR) {
+			sc_cli_error_scanner(&lexems);
 			continue;
 		}
-		rpn = parser(lexems);
+
+
+		rpn = parser(&lexems);
+		//lexems.clear(&lexems);
 		if (rpn == NULL) {
 			continue;
 		}
@@ -41,5 +48,5 @@ int smartcalc_cli(void) {
 
 	free(str);
 
-	return(status);
+	return(err_status);
 }

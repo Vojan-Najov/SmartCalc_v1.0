@@ -2,7 +2,7 @@
 #include "sc_error.h"
 
 int sc_scanner(sc_deque_t *lexems) {
-	int err_status;
+	int err_status = 0;
 	sc_token_t token;
 	int status = SC_EXPRESSION;
 
@@ -11,19 +11,21 @@ int sc_scanner(sc_deque_t *lexems) {
 		if (!lexems->is_empty(lexems) &&
 			 lexems->peek_front(lexems)->type == SC_ASSIGN) {
 			lexems->pop_front(lexems);
-			status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_ASSIGNMENT;
+			status = lexems->is_empty(lexems) ? SC_SCANNER_ERROR : SC_ASSIGNMENT;
 		}
-	} else if (token.type == SC_FUNCTION && token.value.func == SC_F) {
+	} else if (token.type == SC_FUNCTION) {
 		if (!lexems->is_empty(lexems) &&
 			 lexems->peek_front(lexems)->type == SC_ASSIGN) {
-			lexems->pop_front(lexems);
-			status = lexems->is_empty(lexems) ? SC_BAD_EXPR : SC_DEFINITION;
+			if (token.value.func == SC_F) {
+				lexems->pop_front(lexems);
+				status = lexems->is_empty(lexems) ? SC_SCANNER_ERROR : SC_DEFINITION;
+			} else {
+				status = SC_SCANNER_ERROR;
+			}
 		}
-	}
+	} 
 	if (status == SC_EXPRESSION) {
 		err_status = lexems->push_front(lexems, &token);
-	} else if (status == SC_BAD_EXPR) {
-		sc_error_scanner_bad_expr(lexems);
 	}
 	if (err_status == SC_BAD_ALLOC) {
 		sc_error_scanner(lexems);

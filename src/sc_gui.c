@@ -1,3 +1,4 @@
+#include "sc_error.h"
 #include "sc_lexer.h"
 #include "sc_scanner.h"
 #include "sc_parser.h"
@@ -146,56 +147,63 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	entry_buf_str = gtk_entry_buffer_get_text(entry_buf);
 	entry_buf_len = gtk_entry_buffer_get_length(entry_buf);
 
-	tv = GTK_WIDGET(gtk_builder_get_object(build, "tv"));
-	tv_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tv));
-	gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
-	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "> ", 2);
-	gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
-	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, entry_buf_str, entry_buf_len);
-	gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
-	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
-
+	
 	char *str = handle_user_input(entry_buf_str);
-	gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
-	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, str, -1);
+	if (*str) {
+		tv = GTK_WIDGET(gtk_builder_get_object(build, "tv"));
+		tv_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tv));
+		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "> ", 2);
+		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, entry_buf_str, entry_buf_len);
+		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
+
+		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, str, -1);
+		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
+	}
 	g_free(str);
 	
 	gtk_entry_buffer_delete_text(entry_buf, 0, entry_buf_len);
 }
 
-char *handle_user_input(const char *str) {
-	sc_deque_t *lexems, *rpn;
-	int expr_type;
+char *handle_user_input(const char *str_in) {
+	sc_deque_t lexems, *rpn;
+	char *str_out;
 	double result;
+	int expr_type;
+	int err_status;
 	
-	lexems = sc_lexer(str);
-	if (lexems == NULL) {
-		return (g_strdup_printf("%s\n", "lexer error"));
-	}
-	/*
-		err_status = sc_lexer(str, &lexems);
-		if (err_status) {
-			sc_error_lexer(err_status, &lexems);
+	sc_init_deque(&lexems);
+	err_status = sc_lexer(str_in, &lexems);
+	if (err_status) {
+		str_out = sc_gui_error_lexer(err_status, &lexems);
+		return (str_out);
+	} else {
+		expr_type = sc_scanner(&lexems);
+		if (expr_type == SC_SCANNER_ERROR) {
+			str_out = sc_gui_error_scanner(&lexems);
+			return (str_out);
 		}
-	*/
-	expr_type = sc_scanner(lexems);
-	if (expr_type == SC_BAD_EXPR) {
-		return (g_strdup_printf("%s\n", "scanner error"));
-	}
-	rpn = parser(lexems);
-	if (rpn == NULL) {
-		return (g_strdup_printf("%s\n", "parse error"));
-	}
-	if (expr_type == SC_ASSIGNMENT) {
-		sc_assignment(rpn);
-		return (g_strdup_printf("%s\n", "variable assignment"));
-	} else if (expr_type == SC_DEFINITION) {
-		sc_definition(rpn);
-		return (g_strdup_printf("%s\n", "function difinition"));
-	} else if (expr_type == SC_EXPRESSION) {
-		if (sc_calculation(rpn, &result) == 0) {
-			return g_strdup_printf("= %.7f\n", result);
+
+
+		rpn = parser(&lexems);
+		if (rpn == NULL) {
+			return (g_strdup_printf("%s", "parse error"));
+		}
+		if (expr_type == SC_ASSIGNMENT) {
+			sc_assignment(rpn);
+			return (g_strdup_printf("%s", "variable assignment"));
+		} else if (expr_type == SC_DEFINITION) {
+			sc_definition(rpn);
+			return (g_strdup_printf("%s", "function difinition"));
+		} else if (expr_type == SC_EXPRESSION) {
+			if (sc_calculation(rpn, &result) == 0) {
+				return g_strdup_printf("= %.7f", result);
+			}
 		}
 	}
-	return (g_strdup_printf("%s\n", "handle error"));
+	return (g_strdup_printf("%s", "handle error"));
 }

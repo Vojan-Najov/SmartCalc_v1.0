@@ -13,37 +13,74 @@ static void get_symbolic_operator(char c, sc_token_t *token,
 static void get_functional_operator(const char *str, sc_token_t *token,
                                     const char **endptr);
 
-sc_deque_t *sc_lexer(const char *str) {
-	sc_deque_t *lexems;
+static int check_last_tokens(int cur_token, int prev_token);
+
+int sc_lexer(const char *str, sc_deque_t *lexems) {
 	sc_token_t token;
+	int prev_token = SC_EMPTY_TOKEN;
 	int err_status = 0;
 
-	token.type = SC_EMPTY_TOKEN;
-	lexems = sc_create_deque();
-	if (lexems == NULL) {
-		sc_error_lexer(lexems);
-	}
 	while (!err_status && *str) {
-		get_token(str, &token, token.type, &str);
+		get_token(str, &token, prev_token, &str);
 		if (token.type == SC_WRONG_TOKEN) {
 			err_status = SC_BAD_TOKEN;
 		} else if (token.type != SC_EMPTY_TOKEN) {
-			err_status = lexems->push_back(lexems, &token);
-			if (err_status) {
-				sc_error_lexer(lexems);
+			err_status = check_last_tokens(token.type, prev_token);
+			if (!err_status) {
+				err_status = lexems->push_back(lexems, &token);
 			}
 		}
+		prev_token = token.type;
 	}
-	if (err_status == SC_BAD_TOKEN) {
-		sc_error_lexer_bad_token(&lexems);
-	} else if (err_status == SC_BAD_ALLOC) {
-		sc_error_lexer(lexems);
-	} else if (lexems->is_empty(lexems)) {
-		lexems->clear(lexems);
-		lexems = NULL;
+	if (!err_status && lexems->is_empty(lexems)) {
+		err_status = SC_NO_TOKENS;
 	}
 
-	return (lexems);
+	return (err_status);
+}
+
+static int check_last_tokens(int cur_token, int prev_token) {
+	int err_status = 0;
+
+	if (cur_token == SC_NUMBER || cur_token == SC_VAR) {
+		if (prev_token == SC_NUMBER || \
+            prev_token == SC_VAR || prev_token == SC_RBRACKET) {
+      		err_status = SC_BAD_EXPR;
+		}
+		if (prev_token == SC_FUNCTION) {
+      		err_status = SC_BAD_FUNCDEF;
+		}
+	} else if (cur_token == SC_ASSIGN) { \
+		if (prev_token != SC_VAR && prev_token != SC_FUNCTION) {
+			err_status = SC_BAD_EXPR;
+		}
+	} else if (cur_token == SC_UNARY_OP) {
+		if (prev_token == SC_FUNCTION) {
+			err_status = SC_BAD_EXPR;
+		}
+	} else if (cur_token == SC_BINARY_OP) {
+		if (prev_token != SC_NUMBER && \
+            prev_token != SC_VAR && prev_token != SC_RBRACKET) {
+			err_status = SC_BAD_EXPR;
+		}
+	} else if (cur_token == SC_FUNCTION) {
+		if (prev_token == SC_NUMBER || prev_token == SC_VAR || \
+            prev_token == SC_FUNCTION || prev_token == SC_RBRACKET) {
+			err_status = SC_BAD_EXPR;
+		}
+	} else if (cur_token == SC_LBRACKET) {
+		if (prev_token == SC_NUMBER || \
+            prev_token == SC_VAR || prev_token == SC_RBRACKET) {
+			err_status = SC_BAD_EXPR;
+		}
+	} else if (cur_token == SC_RBRACKET) {
+		if (prev_token != SC_NUMBER && \
+            prev_token != SC_VAR && prev_token != SC_RBRACKET) {
+			err_status = SC_BAD_EXPR;
+		}
+	}
+
+	return (err_status);
 }
 
 static void get_token(const char *str, sc_token_t *token,
@@ -73,29 +110,6 @@ static void get_token(const char *str, sc_token_t *token,
 		++str;
 	} else {
 		get_functional_operator(str, token, &str);
-	}
-	if ((token->type == SC_NUMBER || token->type == SC_VAR) && \
-       (prev_token == SC_NUMBER || prev_token == SC_VAR || \
-       prev_token == SC_FUNCTION || prev_token == SC_RBRACKET)) {
-		token->type = SC_WRONG_TOKEN;
-	} else if (token->type == SC_ASSIGN && \
-              prev_token != SC_VAR && prev_token != SC_FUNCTION) {
-		token->type = SC_WRONG_TOKEN;
-	} else if (token->type == SC_UNARY_OP && prev_token == SC_FUNCTION) {
-		token->type = SC_WRONG_TOKEN;
-	} else if (token->type == SC_BINARY_OP && prev_token != SC_NUMBER && \
-              prev_token != SC_VAR && prev_token != SC_RBRACKET) {
-		token->type = SC_WRONG_TOKEN;
-	} else if (token->type == SC_FUNCTION && \
-              (prev_token == SC_NUMBER || prev_token == SC_VAR || \
-              prev_token == SC_FUNCTION || prev_token == SC_RBRACKET)) {
-		token->type = SC_WRONG_TOKEN;
-	} else if (token->type == SC_LBRACKET && (prev_token == SC_NUMBER || \
-              prev_token == SC_VAR || prev_token == SC_RBRACKET)) {
-		token->type = SC_WRONG_TOKEN;
-	} else if (token->type == SC_RBRACKET && prev_token != SC_NUMBER && \
-              prev_token != SC_VAR && prev_token != SC_RBRACKET) {
-		token->type = SC_WRONG_TOKEN;
 	}
 
 	*endptr = str;

@@ -84,6 +84,8 @@ typedef struct sc_deque {
 
 sc_deque_t *sc_create_deque(void);
 
+void sc_init_deque(sc_deque_t *deq);
+
 sc_deque_t *sc_copy_deque(sc_deque_t *src);
 
 int sc_deque_push_back(sc_deque_t *this, sc_token_t *data);

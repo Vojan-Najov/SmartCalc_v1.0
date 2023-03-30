@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Utilitary function, which print error message in stderr. */
+
 int sc_print_error(const char *message) {
 	const char *programm_name = "SmartCalc_v1.0";
 
@@ -10,6 +12,8 @@ int sc_print_error(const char *message) {
 
 	return (SC_FAILURE);
 }
+
+/* Functions for handling errors of command line arguments. */
 
 int sc_print_usage(void) {
 	fprintf(stderr, SC_HELP_MESSAGE);
@@ -28,6 +32,8 @@ int sc_error_program_arg(const char *arg) {
 	return (SC_FAILURE);
 }
 
+/* Functions for handling errors of input reading from terminal. */
+
 void sc_error_input(void *line) {
 	free(line);
 	sc_print_error(SC_STDIN_ERROR_MESSAGE);
@@ -39,40 +45,77 @@ void sc_error_input_alloc(void) {
 	exit(EXIT_FAILURE);
 }
 
-void sc_error_lexer(sc_deque_t *lexems) {
-	if (lexems != NULL) {
-		lexems->clear(lexems);
+/* Functions for handling lexer's errors. */
+
+void sc_cli_error_lexer(int err_status, sc_deque_t *lexems) {
+	lexems->clear(lexems);
+
+	if (err_status == SC_BAD_ALLOC) {
+		sc_print_error(SC_BAD_ALLOC_MESSAGE);
+		exit(EXIT_FAILURE);
+	} else if (err_status == SC_BAD_TOKEN) {
+		sc_print_error(SC_BAD_TOKEN_MESSAGE);
+	} else if (err_status == SC_BAD_EXPR) {
+		sc_print_error(SC_BAD_EXPR_MESSAGE);
+	} else if (err_status == SC_BAD_FUNCDEF) {
+		sc_print_error(SC_BAD_FUNCDEF_MESSAGE);
 	}
-	sc_print_error(SC_BAD_ALLOC_MESSAGE);
-	exit(EXIT_FAILURE);
 }
 
-int sc_error_lexer_bad_token(sc_deque_t **lexems) {
-	if (lexems != NULL) {
-		(*lexems)->clear(*lexems);
-		*lexems = NULL;
-	}
-	sc_print_error(SC_LEXER_ERROR_MESSAGE);
+char *sc_gui_error_lexer(int err_status, sc_deque_t *lexems) {
+	char *err_str;
 
-	return (SC_BAD_TOKEN);
+	lexems->clear(lexems);
+
+	if (err_status == SC_BAD_TOKEN) {
+		err_str = strdup(SC_BAD_TOKEN_MESSAGE);
+	} else if (err_status == SC_BAD_EXPR) {
+		err_str = strdup(SC_BAD_EXPR_MESSAGE);
+	} else if (err_status == SC_BAD_FUNCDEF) {
+		err_str = strdup(SC_BAD_FUNCDEF_MESSAGE);
+	} else if (err_status == SC_NO_TOKENS) {
+		err_str = strdup("");
+	} else {
+		err_str = strdup("NO ERROR HANDLE");
+	}
+
+	if (err_status == SC_BAD_ALLOC || err_str == NULL) {
+		sc_print_error(SC_BAD_ALLOC_MESSAGE);
+		exit(EXIT_FAILURE);
+	}
+
+	return (err_str);
 }
+
+/* Functions for handling scanner's errors. */
 
 void sc_error_scanner(sc_deque_t *lexems) {
-	if (lexems != NULL) {
-		lexems->clear(lexems);
-	}
+	lexems->clear(lexems);
 	sc_print_error(SC_BAD_ALLOC_MESSAGE);
 	exit(EXIT_FAILURE);
 }
 
-int sc_error_scanner_bad_expr(sc_deque_t *lexems) {
-	if (lexems != NULL) {
-		lexems->clear(lexems);
-	}
+void sc_cli_error_scanner(sc_deque_t *lexems) {
+	lexems->clear(lexems);
 	sc_print_error(SC_BAD_EXPR_MESSAGE);
-
-	return (SC_BAD_TOKEN);
 }
+
+char *sc_gui_error_scanner(sc_deque_t *lexems) {
+	char *err_str;
+
+	lexems->clear(lexems);
+	
+	err_str = strdup(SC_BAD_EXPR_MESSAGE);
+	if(err_str == NULL) { 
+		sc_print_error(SC_BAD_ALLOC_MESSAGE);
+		exit(EXIT_FAILURE);
+	}
+
+	return (err_str);
+}
+
+
+
 
 void sc_error_parser_alloc(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack) {
 	if (lexems != NULL) {

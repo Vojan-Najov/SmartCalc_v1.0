@@ -5,12 +5,14 @@
 
 #define SC_BAD_ALLOC 1
 #define SC_BAD_TOKEN 2
-#define SC_BAD_BRACKET 3
-#define SC_BAD_FUNCDEF 4
-#define SC_BAD_VAR 5
-#define SC_BAD_FUNC 6
-#define SC_RECURSIVE_FUNC 7
-#define SC_DEVIDE_BY_ZERO 8
+#define SC_BAD_EXPR 3
+#define SC_BAD_BRACKET 4
+#define SC_BAD_FUNCDEF 5
+#define SC_BAD_VAR 6
+#define SC_BAD_FUNC 7
+#define SC_RECURSIVE_FUNC 8
+#define SC_DEVIDE_BY_ZERO 9
+#define SC_NO_TOKENS 10
 
 #define SC_SUCCESS 0
 #define SC_FAILURE 1
@@ -25,7 +27,7 @@
 	"memory error: bad allocation"
 #define SC_STDIN_ERROR_MESSAGE \
 	"stdin: error"
-#define SC_LEXER_ERROR_MESSAGE \
+#define SC_BAD_TOKEN_MESSAGE \
 	"syntax error: bad token"
 #define SC_BAD_EXPR_MESSAGE \
 	"syntax error: invalid expression"
@@ -42,21 +44,36 @@
 #define SC_DEVIDE_BY_ZERO_MESSAGE \
 	"calculation error: devide by zero"
 
+/* Utilitary function, which print error message in stderr. */
+
 int sc_print_error(const char *message);
+
+/* Functions for handling errors of command line arguments. */
 
 int sc_print_usage(void);
 
 int sc_error_program_arg(const char *arg);
 
+/* Functions for handling errors of input reading from terminal. */
+
 void sc_error_input(void *line);
 
 void sc_error_input_alloc(void);
 
-void sc_error_lexer(sc_deque_t *lexems);
+/* Functions for handling lexer's errors. */
 
-int sc_error_lexer_bad_token(sc_deque_t **lexems);
+void sc_cli_error_lexer(int err_status, sc_deque_t *lexems);
+
+char *sc_gui_error_lexer(int err_status, sc_deque_t *lexems);
+
+/* Functions for handling scanner's errors. */
 
 void sc_error_scanner(sc_deque_t *lexems);
+
+void sc_cli_error_scanner(sc_deque_t *lexems);
+
+char *sc_gui_error_scanner(sc_deque_t *lexems);
+
 
 int sc_error_scanner_bad_expr(sc_deque_t *lexems);
 
