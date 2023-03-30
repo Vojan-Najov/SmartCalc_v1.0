@@ -31,7 +31,7 @@ RM = rm -f
 RMDIR = rm -rf
 PKG-CONFIG = $(shell which pkg-config)
 
-CFLAGS = -Wall -Wextra -Werror -std=c11 -I$(INCLD_DIR) -DSC_DEBUG
+CFLAGS = -Wall -Wextra -Werror -std=c11 -I$(INCLD_DIR) -DSC_DEBUG -D_GNU_SOURCE
 GTK_CFLAGS = $(shell $(PKG-CONFIG) --cflags gtk4)
 #GCOV_FLAGS = -fprofile-arcs -ftest-coverage -g -O0
 
