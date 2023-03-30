@@ -1,3 +1,9 @@
+#include "sc_lexer.h"
+#include "sc_scanner.h"
+#include "sc_parser.h"
+#include "sc_calculator.h"
+#include "sc_variable.h"
+
 #include <gtk/gtk.h>
 
 static void app_activate_cb(GApplication *app);
@@ -8,6 +14,8 @@ static const char *get_str_from_label(const char *label, \
                                       const char *bufstr, guint buflen);
 
 static void assign_btn_clicked_cb(GtkButton *btn, gpointer data);
+
+char *handle_user_input(const char *str);
 
 int smartcalc_gui(int argc, char **argv) {
 	GtkApplication *app;
@@ -125,11 +133,11 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	GtkBuilder *build = GTK_BUILDER(data);
 	GtkWidget *entry;
 	GtkWidget *tv;
-	GtkEntryBuffer *entry_buf;
 	GtkTextBuffer *tv_buf;
+	GtkTextIter tv_buf_iter;
+	GtkEntryBuffer *entry_buf;
 	const char *entry_buf_str;
 	guint entry_buf_len;
-	GtkTextIter tv_buf_iter;
 
 	(void) btn;
 
@@ -146,8 +154,48 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, entry_buf_str, entry_buf_len);
 	gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
 	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
+
+	char *str = handle_user_input(entry_buf_str);
+	gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+	gtk_text_buffer_insert(tv_buf, &tv_buf_iter, str, -1);
+	g_free(str);
 	
 	gtk_entry_buffer_delete_text(entry_buf, 0, entry_buf_len);
-
 }
 
+char *handle_user_input(const char *str) {
+	sc_deque_t *lexems, *rpn;
+	int expr_type;
+	double result;
+	
+	lexems = sc_lexer(str);
+	if (lexems == NULL) {
+		return (g_strdup_printf("%s\n", "lexer error"));
+	}
+	/*
+		err_status = sc_lexer(str, &lexems);
+		if (err_status) {
+			sc_error_lexer(err_status, &lexems);
+		}
+	*/
+	expr_type = sc_scanner(lexems);
+	if (expr_type == SC_BAD_EXPR) {
+		return (g_strdup_printf("%s\n", "scanner error"));
+	}
+	rpn = parser(lexems);
+	if (rpn == NULL) {
+		return (g_strdup_printf("%s\n", "parse error"));
+	}
+	if (expr_type == SC_ASSIGNMENT) {
+		sc_assignment(rpn);
+		return (g_strdup_printf("%s\n", "variable assignment"));
+	} else if (expr_type == SC_DEFINITION) {
+		sc_definition(rpn);
+		return (g_strdup_printf("%s\n", "function difinition"));
+	} else if (expr_type == SC_EXPRESSION) {
+		if (sc_calculation(rpn, &result) == 0) {
+			return g_strdup_printf("= %.7f\n", result);
+		}
+	}
+	return (g_strdup_printf("%s\n", "handle error"));
+}
