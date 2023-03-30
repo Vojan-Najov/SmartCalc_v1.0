@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 }
 
 static int smartcalc_gui(void) {
-	fprintf(stderr, "Sorry, gui not supported\n");
+	fprintf(stderr, "Sorry, gui not supported now.\n");
 	return (0);
 }
 
