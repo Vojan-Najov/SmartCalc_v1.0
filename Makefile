@@ -25,21 +25,23 @@ OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
 INCLD = $(wildcard $(INCLD_DIR)/*.h)
 #TEST_INCLD = $(wildcard $(TEST_INCLD_DIR)/*.h)
 
-LIBS = -lm
-TEST_LIBS = -lcheck -lm
-#TEST_LIBS = -lcheck -lm -lsubunit
-
 CC = gcc
 MKDIR = mkdir -p
 RM = rm -f
 RMDIR = rm -rf
-AR = ar rcs
+PKG-CONFIG = $(shell which pkg-config)
 
-CFLAGS = -Wall -Wextra -Werror -std=c11 -Wpedantic -DSC_DEBUG
+CFLAGS = -Wall -Wextra -Werror -std=c11 -I$(INCLD_DIR) -DSC_DEBUG
+GTK_CFLAGS = $(shell $(PKG-CONFIG) --cflags gtk4)
 #GCOV_FLAGS = -fprofile-arcs -ftest-coverage -g -O0
 
+LIBS = -lm
+GTK_LIBS = $(shell $(PKG-CONFIG) --libs gtk4)
+TEST_LIBS = -lcheck -lm
+#TEST_LIBS = -lcheck -lm -lsubunit
+
 $(NAME): $(OBJ)
-	$(CC) -o $@ $(OBJ) $(LIBS)
+	$(CC) -o $@ $(OBJ) $(LIBS) $(GTK_LIBS)
 
 all: $(NAME)
 
@@ -58,7 +60,7 @@ all: $(NAME)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 	@$(MKDIR) $(@D)
-	$(CC) $(CFLAGS) -I$(INCLD_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $< -o $@
 
 #$(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c  $(TEST_INCLD)
 #	@$(MKDIR) $(@D)
@@ -71,14 +73,16 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 clean:
 	$(RM) $(OBJ)
 	$(RMDIR) $(OBJ_DIR)
-	$(RM) $(TEST_OBJ)
-	$(RMDIR) $(TEST_OBJ_DIR)
-	$(RM) -r $(GCOV_OBJ_DIR)
+
+#$(RM) $(TEST_OBJ)
+#$(RMDIR) $(TEST_OBJ_DIR)
+#$(RM) -r $(GCOV_OBJ_DIR)
 
 fclean: clean
 	$(RM) $(NAME)
-	$(RM) $(TEST)
-	$(RM) -r $(GCOV_DIR)
+
+#$(RM) $(TEST)
+#$(RM) -r $(GCOV_DIR)
 
 format:
 	cp ../materials/linters/.clang-format $(SRC_DIR)/.

@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <object class="GtkApplicationWindow" id="win">
+    <property name="title">SmartCalc_v1.0</property>
+    <property name="default-width">400</property>
+    <property name="default-height">500</property>
+    <child>
+      <object class="GtkBox" id="boxv">
+        <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
+	    <property name="visible">True</property>
+		<property name="spacing">4</property>
+        <child>
+          <object class="GtkScrolledWindow" id="scr">
+            <property name="hexpand">TRUE</property>
+            <property name="vexpand">TRUE</property>
+            <child>
+              <object class="GtkTextView" id="tv">
+                <property name="editable">TRUE</property>
+                <property name="can-focus">False</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkEntry" id="ent">
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="boxh">
+          <property name="orientation">GTK_ORIENTATION_HORIZONTAL</property>
+	      <property name="halign">center</property>
+		  <property name="spacing">10</property>
+            <child>
+              <object class="GtkGrid" id="lgrid">
+	            <child>
+                  <object class="GtkButton" id="clear_button">
+                    <property name="label">cl</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="lbracket_button">
+                    <property name="label">(</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="rbracket_button">
+                    <property name="label">)</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="button1">
+                    <property name="label">1</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="button2">
+                    <property name="label">2</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="button3">
+                    <property name="label">3</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="button4">
+                    <property name="label">4</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="button5">
+                    <property name="label">5</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="button6">
+                    <property name="label">6</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="button7">
+                    <property name="label">7</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="button8">
+                    <property name="label">8</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="button9">
+                    <property name="label">9</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="button0">
+                    <property name="label">0</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">4</property>
+                      <property name="column-span">2</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="dot_button">
+                    <property name="label">.</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">4</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="x_assignment_button">
+                    <property name="label">x assignment</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">5</property>
+                      <property name="column-span">3</property>
+                    </layout>
+                  </object>
+                </child>
+
+
+
+              </object>
+            </child>
+
+            <child>
+              <object class="GtkGrid" id="rgrid">
+	            <child>
+                  <object class="GtkButton" id="plus_button">
+                    <property name="label">+</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="mul_button">
+                    <property name="label">*</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="pow_button">
+                    <property name="label">^</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="x_button">
+                    <property name="label">x</property>
+                    <layout>
+                      <property name="column">3</property>
+                      <property name="row">0</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="minus_button">
+                    <property name="label">-</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="div_button">
+                    <property name="label">/</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="mod_button">
+                    <property name="label">mod</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="f_button">
+                    <property name="label">f</property>
+                    <layout>
+                      <property name="column">3</property>
+                      <property name="row">1</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="assign_button">
+                    <property name="label">=</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">2</property>
+                      <property name="row-span">3</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="cos_button">
+                    <property name="label">cos</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="sin_button">
+                    <property name="label">sin</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="tan_button">
+                    <property name="label">tan</property>
+                    <layout>
+                      <property name="column">3</property>
+                      <property name="row">2</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="acos_button">
+                    <property name="label">acos</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="asin_button">
+                    <property name="label">asin</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="atan_button">
+                    <property name="label">atan</property>
+                    <layout>
+                      <property name="column">3</property>
+                      <property name="row">3</property>
+                    </layout>
+                  </object>
+                </child>
+
+                <child>
+                  <object class="GtkButton" id="sqrt_button">
+                    <property name="label">sqrt</property>
+                    <layout>
+                      <property name="column">1</property>
+                      <property name="row">4</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="ln_button">
+                    <property name="label">ln</property>
+                    <layout>
+                      <property name="column">2</property>
+                      <property name="row">4</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="log_button">
+                    <property name="label">log</property>
+                    <layout>
+                      <property name="column">3</property>
+                      <property name="row">4</property>
+                    </layout>
+                  </object>
+                </child>
+
+	            <child>
+                  <object class="GtkButton" id="f_definition_button">
+                    <property name="label">f definition</property>
+                    <layout>
+                      <property name="column">0</property>
+                      <property name="row">5</property>
+                      <property name="column-span">3</property>
+                    </layout>
+                  </object>
+                </child>
+	            <child>
+                  <object class="GtkButton" id="plot_button">
+                    <property name="label">plot</property>
+                    <layout>
+                      <property name="column">3</property>
+                      <property name="row">5</property>
+                      <property name="column-span">2</property>
+                    </layout>
+                  </object>
+                </child>
+
+
+
+
+
+
+              </object>
+            </child>
+
+
+
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
