@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 int smartcalc_cli(void) {
-	sc_deque_t lexems, *rpn;
+	sc_deque_t lexems, rpn;
 	int expr_type;
 	double result;
 	int err_status = 0;
@@ -28,21 +28,27 @@ int smartcalc_cli(void) {
 			sc_cli_error_scanner(&lexems);
 			continue;
 		}
-
-
-		rpn = parser(&lexems);
-		//lexems.clear(&lexems);
-		if (rpn == NULL) {
+		sc_init_deque(&rpn);
+		err_status = sc_parser(&lexems, &rpn);
+		lexems.clear(&lexems);
+		if (err_status) {
+			sc_cli_error_parser(err_status, &lexems, &rpn);
 			continue;
 		}
 		if (expr_type == SC_ASSIGNMENT) {
-			sc_assignment(rpn);
+			err_status = sc_assignment(&rpn);
 		} else if (expr_type == SC_DEFINITION) {
-			sc_definition(rpn);
+			err_status = sc_definition(&rpn);
 		} else if (expr_type == SC_EXPRESSION) {
-			if (sc_calculation(rpn, &result) == 0) {
-				printf("%.7f\n", result);
+			err_status = sc_calculation(&rpn, &result);
+			if (!err_status) {
+				printf("%.16g\n", result);
 			}
+		}
+		if (err_status) {
+			sc_cli_error_calculator(err_status, &rpn);
+		} else {
+			rpn.clear(&rpn);
 		}
 	}
 

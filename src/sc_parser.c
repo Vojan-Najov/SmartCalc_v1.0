@@ -2,65 +2,67 @@
 #include "sc_error.h"
 #include <stddef.h>
 
-static int _shunting_yard_algorithm(sc_deque_t *lexems,
-                                    sc_deque_t *rpn, sc_deque_t *stack);
-
 static int _check_priority(sc_token_t *token1, sc_token_t *token2);
 
-sc_deque_t *parser(sc_deque_t *lexems) {
-	sc_deque_t *rpn;
-	sc_deque_t *stack;
+static int _shunting_yard_algorithm(sc_deque_t *lexems,
+									sc_deque_t *rpn, sc_deque_t *stack);
+
+int sc_parser(sc_deque_t *lexems, sc_deque_t *rpn) {
+	sc_deque_t stack;
+	sc_token_t token;
 	int err_status = 0;
 
-	rpn = sc_create_deque();
-	stack = sc_create_deque();
-	if (rpn == NULL || stack == NULL) {
-		sc_error_parser_alloc(lexems, rpn, stack);
+	sc_init_deque(&stack);
+	err_status = _shunting_yard_algorithm(lexems, rpn, &stack);
+	while(!err_status && !stack.is_empty(&stack)) {
+		token = stack.pop_front(&stack);
+		if (token.type == SC_LBRACKET) {
+			err_status = SC_BAD_BRACKET;
+		} else {
+			err_status = rpn->push_back(rpn, &token);
+		}
 	}
+	stack.clear(&stack);
 
-	err_status = _shunting_yard_algorithm(lexems, rpn, stack);
-	if (err_status == SC_BAD_ALLOC) {
-		sc_error_parser_alloc(lexems, rpn, stack);
-	} else if (err_status == SC_BAD_BRACKET) {
-		sc_error_parser_bad_bracket(lexems, stack, &rpn);
-	} else if (err_status == SC_BAD_FUNCDEF) {
-		sc_error_parser_bad_funcdef(lexems, stack, &rpn);
-	} else {
-		lexems->clear(lexems);
-		stack->clear(stack);
-	}
-
-	return (rpn);
+	return (err_status);
 }
 
 static int _shunting_yard_algorithm(sc_deque_t *lexems,
 									sc_deque_t *rpn, sc_deque_t *stack) {
 	int err_status = 0;
-	sc_token_t token;
+	sc_token_t token, tmp;
 
-	while(!err_status && !lexems->is_empty(lexems)) {
+	while (!err_status && !lexems->is_empty(lexems)) {
 		token = lexems->pop_front(lexems);
 		if (token.type == SC_NUMBER || token.type == SC_VAR) {
 			err_status = rpn->push_back(rpn, &token);
 		} else if (token.type == SC_FUNCTION) {
 			if (!lexems->is_empty(lexems) && \
-               lexems->peek_front(lexems)->type == SC_LBRACKET) {
+                lexems->peek_front(lexems)->type == SC_LBRACKET) {
 				err_status = stack->push_front(stack, &token);
 			} else {
 				err_status = SC_BAD_FUNCDEF;
 			}
 		} else if (token.type == SC_UNARY_OP || token.type == SC_LBRACKET) {
-			err_status = stack->push_front(stack, &token);
+			if (!lexems->is_empty(lexems)) {
+				err_status = stack->push_front(stack, &token);
+			} else {
+				err_status = SC_BAD_EXPR;
+			}
 		} else if (token.type == SC_BINARY_OP) {
 			while (!err_status && !stack->is_empty(stack) && \
-                  _check_priority(&token, stack->peek_front(stack))) {
-				sc_token_t tmp = stack->pop_front(stack);
+                   _check_priority(&token, stack->peek_front(stack))) {
+				tmp = stack->pop_front(stack);
 				err_status = rpn->push_back(rpn, &tmp);
 			}
-			err_status = stack->push_front(stack, &token);
+			if (!lexems->is_empty(lexems)) {
+				err_status = stack->push_front(stack, &token);
+			} else {
+				err_status = SC_BAD_EXPR;
+			}
 		} else if (token.type == SC_RBRACKET) {
 			while (!err_status && !stack->is_empty(stack) && \
-                  stack->peek_front(stack)->type != SC_LBRACKET) {
+                   stack->peek_front(stack)->type != SC_LBRACKET) {
 				token = stack->pop_front(stack);
 				err_status = rpn->push_back(rpn, &token);
 			}
@@ -71,19 +73,13 @@ static int _shunting_yard_algorithm(sc_deque_t *lexems,
 				stack->pop_front(stack);
 				if (!stack->is_empty(stack) && \
                    (stack->peek_front(stack)->type == SC_UNARY_OP ||
-                   stack->peek_front(stack)->type == SC_FUNCTION)) {
+                    stack->peek_front(stack)->type == SC_FUNCTION)) {
 					token = stack->pop_front(stack);
 					err_status = rpn->push_back(rpn, &token);
 				}
 			}
-		}
-	}
-	while(!err_status && !stack->is_empty(stack)) {
-		token = stack->pop_front(stack);
-		if (token.type == SC_LBRACKET) {
-			err_status = SC_BAD_BRACKET;
 		} else {
-			err_status = rpn->push_back(rpn, &token);
+			err_status = SC_BAD_EXPR;
 		}
 	}
 
@@ -116,8 +112,14 @@ static int _check_priority(sc_token_t *token1, sc_token_t *token2) {
 		o2 = token2->value.binary_op;
 		ret = priority[o2] > priority[o1] || \
 			  (priority[o2] == priority[o1] && associativity[o1] == SC_LEFT);
-	} else if (token2->type == SC_UNARY_OP || token2->type == SC_FUNCTION) {
+	} else if (token2->type == SC_FUNCTION) {
 		ret = 1;
+	} else if (token2->type == SC_UNARY_OP) {
+		if (token1->value.binary_op == SC_POW) {
+			ret = 0;
+		} else {
+			ret = 1;
+		}
 	}
 
 	return (ret);

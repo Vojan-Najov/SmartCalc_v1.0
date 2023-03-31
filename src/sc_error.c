@@ -63,23 +63,33 @@ void sc_cli_error_lexer(int err_status, sc_deque_t *lexems) {
 }
 
 char *sc_gui_error_lexer(int err_status, sc_deque_t *lexems) {
-	char *err_str;
+	char *err_str = NULL;
 
 	lexems->clear(lexems);
 
 	if (err_status == SC_BAD_TOKEN) {
 		err_str = strdup(SC_BAD_TOKEN_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
 	} else if (err_status == SC_BAD_EXPR) {
 		err_str = strdup(SC_BAD_EXPR_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
 	} else if (err_status == SC_BAD_FUNCDEF) {
 		err_str = strdup(SC_BAD_FUNCDEF_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
 	} else if (err_status == SC_NO_TOKENS) {
 		err_str = strdup("");
-	} else {
-		err_str = strdup("NO ERROR HANDLE");
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
 	}
 
-	if (err_status == SC_BAD_ALLOC || err_str == NULL) {
+	if (err_status == SC_BAD_ALLOC) {
 		sc_print_error(SC_BAD_ALLOC_MESSAGE);
 		exit(EXIT_FAILURE);
 	}
@@ -114,91 +124,114 @@ char *sc_gui_error_scanner(sc_deque_t *lexems) {
 	return (err_str);
 }
 
+/* Functions for handling scanner's errors. */
 
+void sc_cli_error_parser(int err_status, sc_deque_t *lexems, sc_deque_t *rpn) {
+	lexems->clear(lexems);
+	rpn->clear(rpn);
 
-
-void sc_error_parser_alloc(sc_deque_t *lexems, sc_deque_t *rpn, sc_deque_t *stack) {
-	if (lexems != NULL) {
-		lexems->clear(lexems);
-	}
-	if (rpn != NULL) {
-		rpn->clear(rpn);
-	}
-	if (lexems != NULL) {
-		stack->clear(stack);
-	}
-	sc_print_error(SC_BAD_ALLOC_MESSAGE);
-	exit(EXIT_FAILURE);
-}
-
-int sc_error_parser_bad_bracket(sc_deque_t *lexems,
-                                sc_deque_t *stack, sc_deque_t **rpn) {
-	if (lexems != NULL) {
-		lexems->clear(lexems);
-	}
-	if (stack != NULL) {
-		stack->clear(stack);
-	}
-	if (*rpn != NULL) {
-		(*rpn)->clear(*rpn);
-		*rpn = NULL;
-	}
-
-	sc_print_error(SC_BAD_BRACKETS_MESSAGE);
-
-	return (SC_BAD_BRACKET);
-}
-
-int sc_error_parser_bad_funcdef(sc_deque_t *lexems,
-                                sc_deque_t *stack, sc_deque_t **rpn) {
-	if (lexems != NULL) {
-		lexems->clear(lexems);
-	}
-	if (stack != NULL) {
-		stack->clear(stack);
-	}
-	if (*rpn != NULL) {
-		(*rpn)->clear(*rpn);
-		*rpn = NULL;
-	}
-
-	sc_print_error(SC_BAD_FUNCDEF_MESSAGE);
-
-	return (SC_BAD_FUNCDEF);
-}
-
-void sc_error_calc_alloc(sc_deque_t *stack, sc_deque_t *rpn) {
-	if (stack != NULL) {
-		stack->clear(stack);
-	}
-	if (rpn != NULL) {
-		rpn->clear(rpn);
-	}
-	sc_print_error(SC_BAD_ALLOC_MESSAGE);
-	exit(EXIT_FAILURE);
-}
-
-int sc_error_calc(sc_deque_t *stack, sc_deque_t *rpn, int error) {
-	if (stack != NULL) {
-		stack->clear(stack);
-	}
-	if (rpn != NULL) {
-		rpn->clear(rpn);
-	}
-	if (error == SC_BAD_ALLOC) {
+	if (err_status == SC_BAD_ALLOC) {
 		sc_print_error(SC_BAD_ALLOC_MESSAGE);
 		exit(EXIT_FAILURE);
-	} else if (error == SC_DEVIDE_BY_ZERO) {
-		sc_print_error(SC_DEVIDE_BY_ZERO_MESSAGE);
-	} else if (error == SC_BAD_VAR) {
-		sc_print_error(SC_BAD_VAR_MESSAGE);
-	} else if (error == SC_BAD_FUNC) {
-		sc_print_error(SC_BAD_FUNC_MESSAGE);
-	} else if (error == SC_BAD_TOKEN) {
+	} else if (err_status == SC_BAD_EXPR) {
 		sc_print_error(SC_BAD_EXPR_MESSAGE);
-	} else if (error == SC_RECURSIVE_FUNC) {
-		sc_print_error(SC_BAD_RECURSIVE_MESSAGE);
+	} else if (err_status == SC_BAD_FUNCDEF) {
+		sc_print_error(SC_BAD_FUNCDEF_MESSAGE);
+	} else if (err_status == SC_BAD_BRACKET) {
+		sc_print_error(SC_BAD_BRACKETS_MESSAGE);
+	}
+}
+
+char *sc_gui_error_parser(int err_status, sc_deque_t *lexems, sc_deque_t *rpn) {
+	char *err_str = NULL;
+
+	lexems->clear(lexems);
+	rpn->clear(rpn);
+
+	if (err_status == SC_BAD_EXPR) {
+		err_str = strdup(SC_BAD_EXPR_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	} else if (err_status == SC_BAD_FUNCDEF) {
+		err_str = strdup(SC_BAD_FUNCDEF_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	} else if (err_status == SC_BAD_BRACKET) {
+		err_str = strdup(SC_BAD_BRACKETS_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
 	}
 
-	return (error);
+	if (err_status == SC_BAD_ALLOC) {
+		sc_print_error(SC_BAD_ALLOC_MESSAGE);
+		exit(EXIT_FAILURE);
+	}
+
+	return (err_str);
 }
+
+/* Functions for handling calculation's errors. */
+
+void sc_cli_error_calculator(int err_status, sc_deque_t *rpn) {
+	rpn->clear(rpn);
+
+	if (err_status == SC_BAD_ALLOC) {
+		sc_print_error(SC_BAD_ALLOC_MESSAGE);
+		exit(EXIT_FAILURE);
+	} else if (err_status == SC_BAD_EXPR) {
+		sc_print_error(SC_BAD_EXPR_MESSAGE);
+	} else if (err_status == SC_BAD_VAR) {
+		sc_print_error(SC_BAD_VAR_MESSAGE);
+	} else if (err_status == SC_BAD_FUNC) {
+		sc_print_error(SC_BAD_FUNC_MESSAGE);
+	} else if (err_status == SC_RECURSIVE_FUNC) {
+		sc_print_error(SC_BAD_RECURSIVE_MESSAGE);
+	} else if (err_status == SC_DEVIDE_BY_ZERO) {
+		sc_print_error(SC_DEVIDE_BY_ZERO_MESSAGE);
+	}
+}
+
+char *sc_gui_error_calculator(int err_status, sc_deque_t *rpn) {
+	char *err_str = NULL;
+
+	rpn->clear(rpn);
+
+	if (err_status == SC_BAD_EXPR) {
+		err_str = strdup(SC_BAD_EXPR_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	} else if (err_status == SC_BAD_VAR) {
+		err_str = strdup(SC_BAD_VAR_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	} else if (err_status == SC_BAD_FUNC) {
+		err_str = strdup(SC_BAD_FUNC_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	} else if (err_status == SC_RECURSIVE_FUNC) {
+		err_str = strdup(SC_BAD_RECURSIVE_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	} else if (err_status == SC_DEVIDE_BY_ZERO) {
+		err_str = strdup(SC_DEVIDE_BY_ZERO_MESSAGE);
+		if (err_str == NULL) {
+			err_status = SC_BAD_ALLOC;
+		}
+	}
+
+	if (err_status == SC_BAD_ALLOC) {
+		sc_print_error(SC_BAD_ALLOC_MESSAGE);
+		exit(EXIT_FAILURE);
+	}
+
+	return (err_str);
+}
+
+

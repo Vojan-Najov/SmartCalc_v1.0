@@ -51,7 +51,7 @@ static void app_activate_cb(GApplication *app) {
 
 	build = gtk_builder_new_from_file("./resources/test.ui");
 	win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
-	gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
+	gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));\
 
 	for (size_t i = 0; i < sizeof(button_id_array) / sizeof(const char *); ++i) {
 		btn = GTK_WIDGET(gtk_builder_get_object(build, button_id_array[i]));
@@ -81,8 +81,10 @@ static void btn_clicked_cb(GtkButton *btn, gpointer data) {
 		gtk_entry_buffer_delete_text(entry_buf, 0, buflen);
 	} else {
 		 if (g_strcmp0(label, "x assignment") == 0) {
+			gtk_entry_buffer_delete_text(entry_buf, 0, buflen);
 			str = "x = ";
 		} else if (g_strcmp0(label, "f definition") == 0) {
+			gtk_entry_buffer_delete_text(entry_buf, 0, buflen);
 			str = "f = ";
 		} else {
 			str = get_str_from_label(label, bufstr, buflen);
@@ -134,6 +136,8 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	GtkBuilder *build = GTK_BUILDER(data);
 	GtkWidget *entry;
 	GtkWidget *tv;
+	GtkWidget *scr;
+	GtkAdjustment *vadj;
 	GtkTextBuffer *tv_buf;
 	GtkTextIter tv_buf_iter;
 	GtkEntryBuffer *entry_buf;
@@ -158,19 +162,29 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, entry_buf_str, entry_buf_len);
 		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
 		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
-
+		if (*str == '-' || g_ascii_isdigit(*str)) {
+			gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
+			gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "= ", 2);
+		}
 		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
 		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, str, -1);
 		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
 		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
 	}
+	if (*str == '-' || g_ascii_isdigit(*str)) {
+		gtk_entry_buffer_set_text(entry_buf, str, -1);
+	} else {
+		gtk_entry_buffer_delete_text(entry_buf, 0, entry_buf_len);
+	}
 	g_free(str);
 	
-	gtk_entry_buffer_delete_text(entry_buf, 0, entry_buf_len);
+	scr = GTK_WIDGET(gtk_builder_get_object(build, "scr"));
+	vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scr));
+	gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj));
 }
 
 char *handle_user_input(const char *str_in) {
-	sc_deque_t lexems, *rpn;
+	sc_deque_t lexems, rpn;
 	char *str_out;
 	double result;
 	int expr_type;
@@ -186,24 +200,32 @@ char *handle_user_input(const char *str_in) {
 		if (expr_type == SC_SCANNER_ERROR) {
 			str_out = sc_gui_error_scanner(&lexems);
 			return (str_out);
-		}
-
-
-		rpn = parser(&lexems);
-		if (rpn == NULL) {
-			return (g_strdup_printf("%s", "parse error"));
-		}
-		if (expr_type == SC_ASSIGNMENT) {
-			sc_assignment(rpn);
-			return (g_strdup_printf("%s", "variable assignment"));
-		} else if (expr_type == SC_DEFINITION) {
-			sc_definition(rpn);
-			return (g_strdup_printf("%s", "function difinition"));
-		} else if (expr_type == SC_EXPRESSION) {
-			if (sc_calculation(rpn, &result) == 0) {
-				return g_strdup_printf("= %.7f", result);
+		} else {
+			sc_init_deque(&rpn);
+			err_status = sc_parser(&lexems, &rpn);
+			if (err_status) {
+				str_out = sc_gui_error_parser(err_status, &lexems, &rpn);
+				return (str_out);
+			} else {
+				if (expr_type == SC_ASSIGNMENT) {
+					err_status = sc_assignment(&rpn);
+					sc_get_variable(&result);
+					str_out = err_status ? NULL : g_strdup_printf("%.16g", result);
+				} else if (expr_type == SC_DEFINITION) {
+					err_status = sc_definition(&rpn);
+					str_out = err_status ? NULL : g_strdup("definition of the f(x)");
+				} else if (expr_type == SC_EXPRESSION) {
+					err_status = sc_calculation(&rpn, &result);
+					str_out = err_status ? NULL : g_strdup_printf("%.16g", result);
+				}
+				if (err_status) {
+					str_out = sc_gui_error_calculator(err_status, &rpn);
+				} else {
+					rpn.clear(&rpn);
+				}
 			}
 		}
 	}
-	return (g_strdup_printf("%s", "handle error"));
+
+	return (str_out);
 }

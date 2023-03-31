@@ -36,11 +36,11 @@
 #define SC_BAD_FUNCDEF_MESSAGE \
 	"syntax error: no parentheses found near the function"
 #define SC_BAD_VAR_MESSAGE \
-	"expression: variable not set"
+	"syntax error: variable not set"
 #define SC_BAD_FUNC_MESSAGE \
-	"expression: function not set"
+	"syntax error: function not set"
 #define SC_BAD_RECURSIVE_MESSAGE \
-	"expression: recursive definitions are not supported"
+	"syntax error: recursive definitions are not supported"
 #define SC_DEVIDE_BY_ZERO_MESSAGE \
 	"calculation error: devide by zero"
 
@@ -74,18 +74,16 @@ void sc_cli_error_scanner(sc_deque_t *lexems);
 
 char *sc_gui_error_scanner(sc_deque_t *lexems);
 
+/* Functions for handling scanner's errors. */
 
-int sc_error_scanner_bad_expr(sc_deque_t *lexems);
+void sc_cli_error_parser(int err_status, sc_deque_t *lexems, sc_deque_t *rpn);
+	
+char *sc_gui_error_parser(int err_status, sc_deque_t *lexems, sc_deque_t *rpn);
 
-void sc_error_parser_alloc(sc_deque_t *lexems,
-                           sc_deque_t *rpn, sc_deque_t *stack);
+/* Functions for handling calculation's errors. */
 
-int sc_error_parser_bad_bracket(sc_deque_t *lexems,
-                                sc_deque_t *stack, sc_deque_t **rpn);
+void sc_cli_error_calculator(int err_status, sc_deque_t *rpn);
 
-int sc_error_parser_bad_funcdef(sc_deque_t *lexems,
-                                sc_deque_t *stack, sc_deque_t **rpn);
-
-int sc_error_calc(sc_deque_t *stack, sc_deque_t *rpn, int error);
+char *sc_gui_error_calculator(int err_status, sc_deque_t *rpn);
 
 #endif
