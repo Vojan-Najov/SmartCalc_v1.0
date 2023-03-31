@@ -89,6 +89,9 @@ format:
 	clang-format -i $(SRC) $(TEST_SRC) $(INCLD) $(TEST_INCLD)
 	$(RM) $(SRC_DIR)/.clang-format
 
+check_ui:
+	gtk4-builder-tool validate ./resources/test.ui
+
 re: fclean all
 
 .PHONY: all clean fclean re format
