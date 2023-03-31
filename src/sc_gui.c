@@ -180,6 +180,7 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	
 	scr = GTK_WIDGET(gtk_builder_get_object(build, "scr"));
 	vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scr));
+	gtk_adjustment_set_upper(vadj, gtk_adjustment_get_upper(vadj) + 20.0);	
 	gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj));
 }
 
