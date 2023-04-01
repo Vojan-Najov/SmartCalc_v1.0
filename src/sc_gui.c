@@ -16,6 +16,8 @@ static const char *get_str_from_label(const char *label, \
 
 static void assign_btn_clicked_cb(GtkButton *btn, gpointer data);
 
+static void plot_btn_clicked_cb(GtkButton *btn, gpointer data);
+
 char *handle_user_input(const char *str);
 
 int smartcalc_gui(int argc, char **argv) {
@@ -57,8 +59,12 @@ static void app_activate_cb(GApplication *app) {
 		btn = GTK_WIDGET(gtk_builder_get_object(build, button_id_array[i]));
 		g_signal_connect(btn, "clicked", G_CALLBACK(btn_clicked_cb), build);
 	}
+
 	btn = GTK_WIDGET(gtk_builder_get_object(build, "assign_button"));
 	g_signal_connect(btn, "clicked", G_CALLBACK(assign_btn_clicked_cb), build);
+
+	btn = GTK_WIDGET(gtk_builder_get_object(build, "plot_button"));
+	g_signal_connect(btn, "clicked", G_CALLBACK(plot_btn_clicked_cb), build);
 
 	gtk_window_present(GTK_WINDOW(win));
 }
@@ -137,6 +143,7 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	GtkWidget *entry;
 	GtkWidget *tv;
 	GtkWidget *scr;
+	GtkWidget *plot_lbl;
 	GtkAdjustment *vadj;
 	GtkTextBuffer *tv_buf;
 	GtkTextIter tv_buf_iter;
@@ -170,6 +177,15 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, str, -1);
 		gtk_text_buffer_get_end_iter(tv_buf, &tv_buf_iter);
 		gtk_text_buffer_insert(tv_buf, &tv_buf_iter, "\n", 1);
+
+		scr = GTK_WIDGET(gtk_builder_get_object(build, "scr"));
+		vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scr));
+		gtk_adjustment_set_upper(vadj, gtk_adjustment_get_upper(vadj) + 20.0);	
+		gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj));
+	}
+	if (g_strcmp0(str, "definition of the f(x)") == 0) {
+		plot_lbl = GTK_WIDGET(gtk_builder_get_object(build, "plot_lbl"));
+		gtk_label_set_text(GTK_LABEL(plot_lbl), entry_buf_str);
 	}
 	if (*str == '-' || g_ascii_isdigit(*str)) {
 		gtk_entry_buffer_set_text(entry_buf, str, -1);
@@ -178,10 +194,6 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	}
 	g_free(str);
 	
-	scr = GTK_WIDGET(gtk_builder_get_object(build, "scr"));
-	vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scr));
-	gtk_adjustment_set_upper(vadj, gtk_adjustment_get_upper(vadj) + 20.0);	
-	gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj));
 }
 
 char *handle_user_input(const char *str_in) {
@@ -230,3 +242,53 @@ char *handle_user_input(const char *str_in) {
 
 	return (str_out);
 }
+
+static void plot_btn_clicked_cb(GtkButton *btn, gpointer data) {
+	static int plot_open = 0;
+	GtkWidget *plot_boxv;
+	GtkWidget *win;
+	GtkStyleContext *btn_context;
+	GtkBuilder *build = GTK_BUILDER(data);
+
+	if (!plot_open) {
+		plot_boxv = GTK_WIDGET(gtk_builder_get_object(build, "plot_boxv"));
+		gtk_widget_set_visible(plot_boxv, TRUE);
+		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
+		gtk_style_context_add_class(btn_context, "suggested-action");
+		plot_open = 1;
+	} else {
+		plot_boxv = GTK_WIDGET(gtk_builder_get_object(build, "plot_boxv"));
+		gtk_widget_set_visible(plot_boxv, FALSE);
+		win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
+		gtk_window_set_default_size(GTK_WINDOW(win), 400, 500);
+		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
+		gtk_style_context_remove_class(btn_context, "suggested-action");
+		plot_open = 0;
+	}
+}
+/*
+static void plot_btn_clicked_cb(GtkButton *btn, gpointer data) {
+	static int plot_open = 0;
+	static GtkWidget *box;
+	static GtkWidget *lbl;
+	GtkWidget *win;
+	GtkStyleContext *btn_context;
+	GtkBuilder *build = GTK_BUILDER(data);
+
+	if (!plot_open) {
+		box = GTK_WIDGET(gtk_builder_get_object(build, "main_boxh"));
+		lbl = gtk_label_new("PLOT");
+		gtk_box_append(GTK_BOX(box), lbl);
+		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
+		gtk_style_context_add_class(btn_context, "suggested-action");
+		plot_open = 1;
+	} else {
+		gtk_box_remove(GTK_BOX(box), lbl);
+		win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
+		gtk_window_set_default_size(GTK_WINDOW(win), 400, 500);
+		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
+		gtk_style_context_remove_class(btn_context, "suggested-action");
+		plot_open = 0;
+	}
+}
+*/
