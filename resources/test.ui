@@ -412,7 +412,7 @@
 		        <property name="spacing">6</property>
                 <child>
                   <object class="GtkLabel" id="ef_lbl1">
-                    <property name="label">E(f):    min</property>
+                    <property name="label">E(f):     min</property>
                   </object>
                 </child>
                 <child>
@@ -428,6 +428,12 @@
                   <object class="GtkEntry" id="ef_max">
                   </object>
                 </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkButton" id="construct_graph_button">
+                <property name="label">Construct graph</property>
+                <property name="halign">start</property>
               </object>
             </child>
             <child>

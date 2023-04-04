@@ -3,6 +3,7 @@
 #include "sc_scanner.h"
 #include "sc_parser.h"
 #include "sc_calculator.h"
+#include "sc_function.h"
 #include "sc_variable.h"
 
 #include <gtk/gtk.h>
@@ -16,9 +17,15 @@ static const char *get_str_from_label(const char *label, \
 
 static void assign_btn_clicked_cb(GtkButton *btn, gpointer data);
 
+static char *handle_user_input(const char *src);
+
 static void plot_btn_clicked_cb(GtkButton *btn, gpointer data);
 
-char *handle_user_input(const char *str);
+static void construct_btn_clicked_cb(GtkButton *btn, gpointer data);
+
+static void draw_function(GtkDrawingArea *area, cairo_t *cr,
+                          int width, int height, gpointer data);
+
 
 int smartcalc_gui(int argc, char **argv) {
 	GtkApplication *app;
@@ -52,8 +59,9 @@ static void app_activate_cb(GApplication *app) {
 	};
 
 	build = gtk_builder_new_from_file("./resources/test.ui");
+
 	win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
-	gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));\
+	gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
 
 	for (size_t i = 0; i < sizeof(button_id_array) / sizeof(const char *); ++i) {
 		btn = GTK_WIDGET(gtk_builder_get_object(build, button_id_array[i]));
@@ -65,6 +73,14 @@ static void app_activate_cb(GApplication *app) {
 
 	btn = GTK_WIDGET(gtk_builder_get_object(build, "plot_button"));
 	g_signal_connect(btn, "clicked", G_CALLBACK(plot_btn_clicked_cb), build);
+
+	btn = GTK_WIDGET(gtk_builder_get_object(build, "construct_graph_button"));
+	g_signal_connect(btn, "clicked", G_CALLBACK(construct_btn_clicked_cb), build);
+
+	GtkWidget *area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
+    gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(area), 800);
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(area), 800);
+	gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(area), draw_function, NULL, NULL);
 
 	gtk_window_present(GTK_WINDOW(win));
 }
@@ -83,6 +99,7 @@ static void btn_clicked_cb(GtkButton *btn, gpointer data) {
 	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
 	bufstr = gtk_entry_buffer_get_text(entry_buf);
 	buflen = gtk_entry_buffer_get_length(entry_buf);
+
 	if (g_strcmp0(label, "cl") == 0) {
 		gtk_entry_buffer_delete_text(entry_buf, 0, buflen);
 	} else {
@@ -150,6 +167,7 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	GtkEntryBuffer *entry_buf;
 	const char *entry_buf_str;
 	guint entry_buf_len;
+	char *str;
 
 	(void) btn;
 
@@ -157,9 +175,9 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
 	entry_buf_str = gtk_entry_buffer_get_text(entry_buf);
 	entry_buf_len = gtk_entry_buffer_get_length(entry_buf);
-
 	
-	char *str = handle_user_input(entry_buf_str);
+	str = handle_user_input(entry_buf_str);
+
 	if (*str) {
 		tv = GTK_WIDGET(gtk_builder_get_object(build, "tv"));
 		tv_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(tv));
@@ -183,56 +201,56 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 		gtk_adjustment_set_upper(vadj, gtk_adjustment_get_upper(vadj) + 20.0);	
 		gtk_adjustment_set_value(vadj, gtk_adjustment_get_upper(vadj));
 	}
+
 	if (g_strcmp0(str, "definition of the f(x)") == 0) {
 		plot_lbl = GTK_WIDGET(gtk_builder_get_object(build, "plot_lbl"));
 		gtk_label_set_text(GTK_LABEL(plot_lbl), entry_buf_str);
 	}
+
 	if (*str == '-' || g_ascii_isdigit(*str)) {
 		gtk_entry_buffer_set_text(entry_buf, str, -1);
 	} else {
 		gtk_entry_buffer_delete_text(entry_buf, 0, entry_buf_len);
 	}
+
 	g_free(str);
-	
 }
 
-char *handle_user_input(const char *str_in) {
+static char *handle_user_input(const char *src) {
 	sc_deque_t lexems, rpn;
-	char *str_out;
+	char *dest;
 	double result;
 	int expr_type;
 	int err_status;
 	
 	sc_init_deque(&lexems);
-	err_status = sc_lexer(str_in, &lexems);
+	err_status = sc_lexer(src, &lexems);
 	if (err_status) {
-		str_out = sc_gui_error_lexer(err_status, &lexems);
-		return (str_out);
+		dest = sc_gui_error_lexer(err_status, &lexems);
 	} else {
 		expr_type = sc_scanner(&lexems);
 		if (expr_type == SC_SCANNER_ERROR) {
-			str_out = sc_gui_error_scanner(&lexems);
-			return (str_out);
+			dest = sc_gui_error_scanner(&lexems);
 		} else {
 			sc_init_deque(&rpn);
 			err_status = sc_parser(&lexems, &rpn);
 			if (err_status) {
-				str_out = sc_gui_error_parser(err_status, &lexems, &rpn);
-				return (str_out);
+				dest = sc_gui_error_parser(err_status, &lexems, &rpn);
 			} else {
+				lexems.clear(&lexems);
 				if (expr_type == SC_ASSIGNMENT) {
 					err_status = sc_assignment(&rpn);
 					sc_get_variable(&result);
-					str_out = err_status ? NULL : g_strdup_printf("%.16g", result);
+					dest = err_status ? NULL : g_strdup_printf("%.16g", result);
 				} else if (expr_type == SC_DEFINITION) {
 					err_status = sc_definition(&rpn);
-					str_out = err_status ? NULL : g_strdup("definition of the f(x)");
+					dest = err_status ? NULL : g_strdup("definition of the f(x)");
 				} else if (expr_type == SC_EXPRESSION) {
 					err_status = sc_calculation(&rpn, &result);
-					str_out = err_status ? NULL : g_strdup_printf("%.16g", result);
+					dest = err_status ? NULL : g_strdup_printf("%.16g", result);
 				}
 				if (err_status) {
-					str_out = sc_gui_error_calculator(err_status, &rpn);
+					dest = sc_gui_error_calculator(err_status, &rpn);
 				} else {
 					rpn.clear(&rpn);
 				}
@@ -240,7 +258,7 @@ char *handle_user_input(const char *str_in) {
 		}
 	}
 
-	return (str_out);
+	return (dest);
 }
 
 static void plot_btn_clicked_cb(GtkButton *btn, gpointer data) {
@@ -250,45 +268,106 @@ static void plot_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	GtkStyleContext *btn_context;
 	GtkBuilder *build = GTK_BUILDER(data);
 
+	plot_boxv = GTK_WIDGET(gtk_builder_get_object(build, "plot_boxv"));
+	btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
+
 	if (!plot_open) {
-		plot_boxv = GTK_WIDGET(gtk_builder_get_object(build, "plot_boxv"));
 		gtk_widget_set_visible(plot_boxv, TRUE);
-		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
 		gtk_style_context_add_class(btn_context, "suggested-action");
 		plot_open = 1;
 	} else {
-		plot_boxv = GTK_WIDGET(gtk_builder_get_object(build, "plot_boxv"));
 		gtk_widget_set_visible(plot_boxv, FALSE);
 		win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
 		gtk_window_set_default_size(GTK_WINDOW(win), 400, 500);
-		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
 		gtk_style_context_remove_class(btn_context, "suggested-action");
 		plot_open = 0;
 	}
 }
-/*
-static void plot_btn_clicked_cb(GtkButton *btn, gpointer data) {
-	static int plot_open = 0;
-	static GtkWidget *box;
-	static GtkWidget *lbl;
-	GtkWidget *win;
-	GtkStyleContext *btn_context;
-	GtkBuilder *build = GTK_BUILDER(data);
 
-	if (!plot_open) {
-		box = GTK_WIDGET(gtk_builder_get_object(build, "main_boxh"));
-		lbl = gtk_label_new("PLOT");
-		gtk_box_append(GTK_BOX(box), lbl);
-		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
-		gtk_style_context_add_class(btn_context, "suggested-action");
-		plot_open = 1;
-	} else {
-		gtk_box_remove(GTK_BOX(box), lbl);
-		win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
-		gtk_window_set_default_size(GTK_WINDOW(win), 400, 500);
-		btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
-		gtk_style_context_remove_class(btn_context, "suggested-action");
-		plot_open = 0;
+static void construct_btn_clicked_cb(GtkButton *btn, gpointer data) {
+	GtkBuilder *build = GTK_BUILDER(data);
+	GtkWidget *area;
+
+	(void) btn;
+	area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
+	gtk_widget_queue_draw(area);
+}
+
+static void draw_function(GtkDrawingArea *area, cairo_t *cr,
+                          int width, int height, gpointer data) {
+	GdkRGBA color;
+	GtkStyleContext *context;
+
+	(void) data;
+	(void) context;
+	(void) color;
+
+	context = gtk_widget_get_style_context (GTK_WIDGET (area));
+
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	cairo_paint_with_alpha(cr, 0.1);
+
+  	cairo_set_source_rgb(cr, 0.5, 0.5, 0.0);
+	for (int k = 0; k <= width; k += 10) {
+  		cairo_move_to (cr, k, 0);
+  		cairo_line_to (cr, k, height);
+		
+	}
+    for (int k = 0; k <= height; k += 10) {
+  		cairo_move_to (cr, 0, k);
+  		cairo_line_to (cr, width, k);
+		
+	}
+  	cairo_set_line_width (cr, 1);
+  	cairo_stroke (cr);
+
+  	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+    cairo_move_to (cr, width/2, 0);
+    cairo_line_to (cr, width/2, height);
+    cairo_move_to (cr, 0, height/2); 
+    cairo_line_to (cr, width, height / 2);
+  	cairo_set_line_width (cr, 2);
+  	cairo_stroke (cr);
+
+	int df_min = -10;
+	int df_max = 10;
+	int ef_min = -10;
+	int ef_max = 10;
+	int hcount = df_max - df_min ;
+	int vcount = ef_max - ef_min ;
+
+	(void) hcount; (void) vcount;
+	double step = ((double)df_max - (double)df_min ) / 100000;
+	double x = df_min;
+	double y;
+	(void) step;
+	double s1 = width / hcount;
+	double s2 = width / vcount;
+  
+	sc_deque_t *func;
+	if (sc_function_status() == SC_FUNC_SET) {
+		int start = 1;
+  		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+		for (x = df_min; x <= df_max; x += step) {
+			sc_set_variable(x);
+			sc_get_function(&func);
+			sc_calculation(func, &y);
+			if (isnan(y) || isinf(y)) {
+				start = 1;
+				continue;
+			}
+			if (start) {
+				cairo_move_to(cr, x * s1 + width/2, height/2 - y  * s2); 
+				start = 0;
+			} else {
+				cairo_line_to(cr, x * s1 + width/2, height/2 - y * s2);
+			}
+			if (y > ef_max || y < ef_min || isnan(y) || isinf(y)) {
+				start = 1;
+			}
+		} 
+  		cairo_set_line_width (cr, 3);
+		cairo_stroke (cr);
 	}
 }
-*/
+

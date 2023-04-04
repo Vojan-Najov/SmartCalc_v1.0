@@ -64,12 +64,11 @@ int sc_get_function(sc_deque_t **func_def) {
 	return (err_status);
 }
 
+int sc_function_status(void) {
+	int *func_status;
+	
+	func_status = _get_function_status();
 
-
-
-
-
-
-
-
+	return (*func_status);
+}
 
