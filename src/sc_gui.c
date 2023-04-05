@@ -51,6 +51,16 @@ static void drawing_plot_cycle(cairo_t *cr_src, double dmin, double dmax,
 static void drawing_adaptive_grid(cairo_t *cr_src, int width, int height, \
                          double dmin, double dmax, double emin, double emax);
 
+static void drawing_scale_x(cairo_t *cr, int width, int height,
+                          double dmin, double dmax, double emin, double emax);
+
+static void drawing_scale_y(cairo_t *cr, int width, int height,
+                          double dmin, double dmax, double emin, double emax);
+
+static double transformation_x(sc_affine_transform_t *transform, double x);
+
+static double transformation_y(sc_affine_transform_t *transform, double y);
+
 
 int smartcalc_gui(int argc, char **argv) {
 	GtkApplication *app;
@@ -187,6 +197,7 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	GtkWidget *tv;
 	GtkWidget *scr;
 	GtkWidget *plot_lbl;
+	GtkWidget *area;
 	GtkAdjustment *vadj;
 	GtkTextBuffer *tv_buf;
 	GtkTextIter tv_buf_iter;
@@ -231,6 +242,8 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	if (g_strcmp0(str, "definition of the f(x)") == 0) {
 		plot_lbl = GTK_WIDGET(gtk_builder_get_object(build, "plot_lbl"));
 		gtk_label_set_text(GTK_LABEL(plot_lbl), entry_buf_str);
+		area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
+		gtk_widget_queue_draw(area);
 	}
 
 	if (*str == '-' || g_ascii_isdigit(*str)) {
@@ -328,17 +341,21 @@ static void draw_function(GtkDrawingArea *area, cairo_t *cr,
 	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
 	cairo_paint_with_alpha(cr, 0.1);
 
-	drawing_coordinate_axes(cr, width, height);
-
 	get_df_ef(build, &dmin, &dmax, &emin, &emax);
+
+	drawing_coordinate_axes(cr, width, height);
 	
 	drawing_adaptive_grid(cr, width, height, dmin, dmax, emin, emax);
 
 	drawing_plot(cr, width, height, dmin, dmax, emin, emax);
 
+	drawing_scale_x(cr, width, height, dmin, dmax, emin, emax);
+	drawing_scale_y(cr, width, height, dmin, dmax, emin, emax);
 }
 
 static void drawing_coordinate_axes(cairo_t *cr, int width, int height) {
+	cairo_text_extents_t te;
+
   	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_move_to (cr, width/2, 0);
     cairo_line_to (cr, width/2, height);
@@ -346,6 +363,19 @@ static void drawing_coordinate_axes(cairo_t *cr, int width, int height) {
     cairo_line_to (cr, width, height / 2);
   	cairo_set_line_width (cr, 2);
   	cairo_stroke (cr);
+
+	cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+	cairo_select_font_face (cr, "Georgia",
+                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size (cr, 15);
+
+	cairo_text_extents (cr, "x", &te);
+	cairo_move_to(cr, (double)width - te.width - 2, (double)height/2.0 - 4);
+	cairo_show_text (cr, "x");
+
+	cairo_text_extents (cr, "f(x)", &te);
+	cairo_move_to(cr, (double)width/2.0 - te.width - 4, te.height);
+	cairo_show_text (cr, "f(x)");
 }
 
 static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
@@ -368,7 +398,6 @@ static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
 			num = -1.0E6;
 		}
 	}
-	//*dmin = floor(num);
 	*dmin = num;
 
 	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_max"));
@@ -384,7 +413,6 @@ static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
 			num = -1.0E6;
 		}
 	}
-	//*dmax = trunc(num) == num ? num : trunc(num) + 1.0;
 	*dmax = num;
 
 	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_min"));
@@ -400,7 +428,6 @@ static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
 			num = -1.0E6;
 		}
 	}
-	//*emin = floor(num);
 	*emin = num;
 
 	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_max"));
@@ -416,7 +443,6 @@ static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
 			num = -1.0E6;
 		}
 	}
-	//*emax = trunc(num) == num ? num : trunc(num) + 1.0;
 	*emax = num;
 }
 
@@ -546,106 +572,10 @@ static void drawing_plot_cycle(cairo_t *cr, double dmin, double dmax,
 	cairo_stroke(cr);
 }
 
-/*
-static void drawing_plot(cairo_t *cr_src, int width, int height, \
-                         double dmin, double dmax, double emin, double emax) {
-	sc_deque_t *func;
-	double dif = dmax - dmin;
-	double emax_tmp = emax;
-	double emin_tmp = emin;
-	double dmax_tmp = dmax;
-	double dmin_tmp = dmin;
-	if (emax - emin > dif) {
-		dif = emax - emin;
-		double r = dif - (dmax - dmin);
-		r /= 2.0;
-		dmax += r;
-		dmin -= r;
-	} else {
-		double r = dif - (emax - emin);
-		r /= 2.0;
-		emax += r;
-		emin -= r;
-	}
-	double wscale = width / dif;
-	double hscale = height / dif;
-	double step = (dmax_tmp - dmin_tmp) / 1.0E5;
-	if (step < 1.e-7) {
-		step = 1.e-7;
-	}
-	double x, y, x_next, y_next;
-	int move_to = 1;
-	int err_status = 0;
-
-	(void) cr_src;
-	cairo_surface_t *surface =
-            cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    cairo_t *cr =
-            cairo_create (surface);
-	
-	// temporary variable
-
-	if (sc_function_status() == SC_FUNC_SET) {
-  		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
-		for (x = dmin_tmp; x <= dmax_tmp; x += step) {
-			if (move_to) {
-				sc_set_variable(x);
-				sc_get_function(&func);
-				err_status = sc_calculation(func, &y);
-				func->clear(func);
-			} else {
-				x = x_next;
-				y = y_next;
-			}
-			if (isnan(y)) {
-				move_to = 1;
-				continue;
-			}
-			if (err_status == SC_DEVIDE_BY_ZERO) {
-				move_to = 1;
-				continue;
-			}
-			x_next = x + step;
-			sc_set_variable(x_next);
-			sc_get_function(&func);
-			err_status = sc_calculation(func, &y_next);
-			func->clear(func);
-			if (!isnan(y_next) && !err_status) {
-				if (move_to) {
-					cairo_move_to(cr, (x - (dmin + dif/2)) * wscale + width/2,
-                                       height/2 - (y - (emin + dif/2))  * hscale); 
-					move_to = 0;
-				} else {
-					cairo_line_to(cr, (x - (dmin + dif/2)) * wscale + width/2,
-                                       height/2 - (y - (emin + dif/2))  * hscale); 
-				}
-				if (fabs((y_next - y) / (x_next - x)) > 1e6) {
-					move_to = 1;
-				}
-			}
-		}		
-  		cairo_set_line_width (cr, 2);
-		cairo_stroke (cr);
-
-		cairo_surface_t *tmp = cairo_get_target(cr);
-		cairo_set_source_surface(cr_src, tmp, 0, 0);
-		cairo_rectangle(cr_src, 0, height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
-                        width, (emax_tmp - emin_tmp) * hscale);
-		(void) emin_tmp;
-		cairo_fill(cr_src);
-		cairo_rectangle(cr_src, 0, height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
-                        width, (emax_tmp - emin_tmp) * hscale);
-		cairo_stroke(cr_src);
-	}
-	
-}
-*/
-
 static void drawing_adaptive_grid(cairo_t *cr_src,
                                   int width, int height,
                                   double dmin, double dmax,
                                   double emin, double emax) {
-
 	double dif = dmax - dmin;
 	double emax_tmp = emax;
 	double emin_tmp = emin;
@@ -695,5 +625,95 @@ static void drawing_adaptive_grid(cairo_t *cr_src,
 
 	cairo_surface_destroy(surface);
 	cairo_destroy(cr);
+}
+
+static void drawing_scale_x(cairo_t *cr, int width, int height,
+                          double dmin, double dmax, double emin, double emax) {
+	cairo_text_extents_t te;
+	double d, delta;
+	int source;
+	char str[256];
+
+	cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+	cairo_select_font_face (cr, "Georgia",
+                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size (cr, 10);
+
+	delta = (dmax - dmin > emax - emin) ? (dmax - dmin)/20.0 : (emax - emin)/20.0;
+
+	d = (dmin + dmax) / 2.0;
+	source = width / 2;
+	sprintf(str, "%.2g", d);
+	cairo_save(cr);
+	cairo_text_extents (cr, str, &te);
+	cairo_translate(cr, source, height / 2);
+	cairo_rotate(cr, M_PI / 2);
+	cairo_move_to(cr, 0, 0);
+	cairo_show_text (cr, str);
+	cairo_restore(cr);
+
+	source = width / 2 + 40;
+	for (double tmp = d + delta; source <= width; tmp += delta, source += 40) {
+		sprintf(str, "%.2g", tmp);
+		cairo_save(cr);
+		cairo_text_extents (cr, str, &te);
+		cairo_translate(cr, source - te.height, height / 2);
+		cairo_rotate(cr, M_PI / 2);
+		cairo_move_to(cr, 0, 0);
+		cairo_show_text (cr, str);
+		cairo_restore(cr);
+	}
+
+	source = width / 2 - 40;
+	for (double tmp = d - delta; source >= 0; tmp -= delta, source -= 40) {
+		sprintf(str, "%.2g", tmp);
+		cairo_save(cr);
+		cairo_text_extents (cr, str, &te);
+		cairo_translate(cr, source + te.height, height / 2);
+		cairo_text_extents (cr, str, &te);
+		cairo_rotate(cr, -M_PI / 2.0);
+		cairo_move_to(cr, 0, 0);
+		cairo_show_text (cr, str);
+		cairo_restore(cr);
+	}
+}
+
+static void drawing_scale_y(cairo_t *cr, int width, int height,
+                          double dmin, double dmax, double emin, double emax) {
+	cairo_text_extents_t te;
+	double d, delta;
+	int source;
+	char str[256];
+
+	cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+	cairo_select_font_face (cr, "Georgia",
+                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+	cairo_set_font_size (cr, 10);
+
+	delta = (dmax - dmin > emax - emin) ? (dmax - dmin)/20.0 : (emax - emin)/20.0;
+
+	d = (emin + emax) / 2.0;
+
+	source = height / 2;
+	sprintf(str, "%.2g", d);
+	cairo_text_extents (cr, str, &te);
+	cairo_move_to(cr, width / 2, source);
+	cairo_show_text (cr, str);
+
+	source = height / 2 - 40;
+	for (double tmp = d + delta; source >= 0; tmp += delta, source -= 40) {
+		sprintf(str, "%.2g", tmp);
+		cairo_text_extents (cr, str, &te);
+		cairo_move_to(cr, width/2, source + te.height);
+		cairo_show_text (cr, str);
+	}
+
+	source = height / 2 + 40;
+	for (double tmp = d - delta; source <= height; tmp -= delta, source += 40) {
+		sprintf(str, "%.2g", tmp);
+		cairo_text_extents (cr, str, &te);
+		cairo_move_to(cr, width/2 - te.width, source);
+		cairo_show_text (cr, str);
+	}
 }
 
