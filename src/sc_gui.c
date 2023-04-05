@@ -8,6 +8,17 @@
 
 #include <gtk/gtk.h>
 
+typedef struct _sc_affine_transform {
+	double x0;
+	double x1;
+	double x2;
+	double y0;
+	double y1;
+	double y2;
+	double (*transform_x)(struct _sc_affine_transform *, double);
+	double (*transform_y)(struct _sc_affine_transform *, double);
+} sc_affine_transform_t;
+
 static void app_activate_cb(GApplication *app);
 
 static void btn_clicked_cb(GtkButton *btn, gpointer data);
@@ -25,6 +36,20 @@ static void construct_btn_clicked_cb(GtkButton *btn, gpointer data);
 
 static void draw_function(GtkDrawingArea *area, cairo_t *cr,
                           int width, int height, gpointer data);
+
+static void drawing_coordinate_axes(cairo_t *cr, int width, int height);
+
+static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
+                      double *emin,  double *emax);
+
+static void drawing_plot(cairo_t *cr, int width, int height, \
+                         double dmin, double dmax, double emin, double emax);
+
+static void drawing_plot_cycle(cairo_t *cr_src, double dmin, double dmax,
+                               double step, sc_affine_transform_t *transform);
+
+static void drawing_adaptive_grid(cairo_t *cr_src, int width, int height, \
+                         double dmin, double dmax, double emin, double emax);
 
 
 int smartcalc_gui(int argc, char **argv) {
@@ -80,7 +105,8 @@ static void app_activate_cb(GApplication *app) {
 	GtkWidget *area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(area), 800);
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(area), 800);
-	gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(area), draw_function, NULL, NULL);
+	gtk_drawing_area_set_draw_func(GTK_DRAWING_AREA(area),
+                                   draw_function, build, NULL);
 
 	gtk_window_present(GTK_WINDOW(win));
 }
@@ -295,32 +321,24 @@ static void construct_btn_clicked_cb(GtkButton *btn, gpointer data) {
 
 static void draw_function(GtkDrawingArea *area, cairo_t *cr,
                           int width, int height, gpointer data) {
-	GdkRGBA color;
-	GtkStyleContext *context;
-
-	(void) data;
-	(void) context;
-	(void) color;
-
-	context = gtk_widget_get_style_context (GTK_WIDGET (area));
+	GtkBuilder *build = GTK_BUILDER(data);
+	double dmin, dmax, emin, emax;
+	(void) area;
 
 	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
 	cairo_paint_with_alpha(cr, 0.1);
 
-  	cairo_set_source_rgb(cr, 0.5, 0.5, 0.0);
-	for (int k = 0; k <= width; k += 10) {
-  		cairo_move_to (cr, k, 0);
-  		cairo_line_to (cr, k, height);
-		
-	}
-    for (int k = 0; k <= height; k += 10) {
-  		cairo_move_to (cr, 0, k);
-  		cairo_line_to (cr, width, k);
-		
-	}
-  	cairo_set_line_width (cr, 1);
-  	cairo_stroke (cr);
+	drawing_coordinate_axes(cr, width, height);
 
+	get_df_ef(build, &dmin, &dmax, &emin, &emax);
+	
+	drawing_adaptive_grid(cr, width, height, dmin, dmax, emin, emax);
+
+	drawing_plot(cr, width, height, dmin, dmax, emin, emax);
+
+}
+
+static void drawing_coordinate_axes(cairo_t *cr, int width, int height) {
   	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
     cairo_move_to (cr, width/2, 0);
     cairo_line_to (cr, width/2, height);
@@ -328,46 +346,354 @@ static void draw_function(GtkDrawingArea *area, cairo_t *cr,
     cairo_line_to (cr, width, height / 2);
   	cairo_set_line_width (cr, 2);
   	cairo_stroke (cr);
+}
 
-	int df_min = -10;
-	int df_max = 10;
-	int ef_min = -10;
-	int ef_max = 10;
-	int hcount = df_max - df_min ;
-	int vcount = ef_max - ef_min ;
+static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
+                      double *emin,  double *emax) {
+	GtkWidget *entry;
+	GtkEntryBuffer *entry_buf;
+	const char *bufstr;
+	double num;
 
-	(void) hcount; (void) vcount;
-	double step = ((double)df_max - (double)df_min ) / 100000;
-	double x = df_min;
-	double y;
-	(void) step;
-	double s1 = width / hcount;
-	double s2 = width / vcount;
-  
-	sc_deque_t *func;
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_min"));
+	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
+	bufstr = gtk_entry_buffer_get_text(entry_buf);
+	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
+		num = -10.0;
+	} else {
+		num = g_ascii_strtod(bufstr, NULL);
+		if (num > 1.0E6) {
+			num = 1.0E6;
+		} else if (num < -1.0E6) {
+			num = -1.0E6;
+		}
+	}
+	//*dmin = floor(num);
+	*dmin = num;
+
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_max"));
+	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
+	bufstr = gtk_entry_buffer_get_text(entry_buf);
+	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
+		num = 10.0;
+	} else {
+		num = g_ascii_strtod(bufstr, NULL);
+		if (num > 1.0E6) {
+			num = 1.0E6;
+		} else if (num < -1.0E6) {
+			num = -1.0E6;
+		}
+	}
+	//*dmax = trunc(num) == num ? num : trunc(num) + 1.0;
+	*dmax = num;
+
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_min"));
+	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
+	bufstr = gtk_entry_buffer_get_text(entry_buf);
+	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
+		num = -10.0;
+	} else {
+		num = g_ascii_strtod(bufstr, NULL);
+		if (num > 1.0E6) {
+			num = 1.0E6;
+		} else if (num < -1.0E6) {
+			num = -1.0E6;
+		}
+	}
+	//*emin = floor(num);
+	*emin = num;
+
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_max"));
+	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
+	bufstr = gtk_entry_buffer_get_text(entry_buf);
+	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
+		num = 10.0;
+	} else {
+		num = g_ascii_strtod(bufstr, NULL);
+		if (num > 1.0E6) {
+			num = 1.0E6;
+		} else if (num < -1.0E6) {
+			num = -1.0E6;
+		}
+	}
+	//*emax = trunc(num) == num ? num : trunc(num) + 1.0;
+	*emax = num;
+}
+
+static double transformation_x(sc_affine_transform_t *transform, double x) {
+	return ((x + transform->x0) * transform->x1 + transform->x2);
+}
+
+static double transformation_y(sc_affine_transform_t *transform, double y) {
+	return ((y + transform->y0) * transform->y1 + transform->y2);
+}
+
+static void init_affine_transform(sc_affine_transform_t *transform,
+                                  double x0, double x1, double x2,
+                                  double y0, double y1, double y2) {
+	transform->x0 = x0;
+	transform->x1 = x1;
+	transform->x2 = x2;
+	transform->y0 = y0;
+	transform->y1 = y1;
+	transform->y2 = y2;
+	transform->transform_x = &transformation_x;
+	transform->transform_y = &transformation_y;
+}
+
+static void drawing_plot(cairo_t *cr_src, int width, int height, \
+                         double dmin, double dmax, double emin, double emax) {
+	double dif = dmax - dmin;
+	double emax_tmp = emax;
+	double emin_tmp = emin;
+	double dmax_tmp = dmax;
+	double dmin_tmp = dmin;
+	double r, wscale, hscale;
+	double step;
+	sc_affine_transform_t transform;
+	cairo_t *cr;
+	cairo_surface_t *surface;
+
+	if (emax - emin > dif) {
+		dif = emax - emin;
+		r = (dif - (dmax - dmin)) / 2.0;
+		dmax += r;
+		dmin -= r;
+	} else {
+		r = (dif - (emax - emin)) / 2.0;
+		emax += r;
+		emin -= r;
+	}
+	wscale = width / dif;
+	hscale = height / dif;
+	step = (dmax_tmp - dmin_tmp) / 1.0E5;
+	step = step > 1.0E-6 ? step : 1.0E-6;
+
 	if (sc_function_status() == SC_FUNC_SET) {
-		int start = 1;
-  		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
-		for (x = df_min; x <= df_max; x += step) {
+		sc_save_variable();
+
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    	cr = cairo_create (surface);
+
+		init_affine_transform(&transform,
+                              -(dmin + dif / 2.0), wscale, (double)width / 2.0,
+                              -(emin + dif / 2.0), -hscale, (double)height / 2.0);
+
+		drawing_plot_cycle(cr, dmin_tmp, dmax_tmp, step, &transform);
+
+		surface = cairo_get_target(cr);
+		cairo_set_source_surface(cr_src, surface, 0, 0);
+		cairo_rectangle(cr_src, 0, transform.transform_y(&transform, emax_tmp),
+                        width, (emax_tmp - emin_tmp) * hscale);
+		cairo_fill(cr_src);
+		cairo_rectangle(cr_src, 0, transform.transform_y(&transform, emax_tmp),
+                        width, (emax_tmp - emin_tmp) * hscale);
+		cairo_stroke(cr_src);
+
+		cairo_surface_destroy(surface);
+		cairo_destroy(cr);
+		sc_restore_variable();
+	}
+}
+
+static void drawing_plot_cycle(cairo_t *cr, double dmin, double dmax,
+                               double step, sc_affine_transform_t *transform) {
+	double x, y;
+	double x_next, y_next;
+	sc_deque_t *func;
+	int err_status;
+	int move_to = 1;
+  	
+	cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+
+	for (x = dmin; x <= dmax; x += step) {
+		if (move_to) {
 			sc_set_variable(x);
 			sc_get_function(&func);
-			sc_calculation(func, &y);
-			if (isnan(y) || isinf(y)) {
-				start = 1;
+			err_status = sc_calculation(func, &y);
+			sc_destroy_deque(func);
+		} else {
+			x = x_next;
+			y = y_next;
+		}
+		if (err_status == SC_DEVIDE_BY_ZERO || isnan(y)) {
+			move_to = 1;
+			continue;
+		}
+		x_next = x + step;
+		sc_set_variable(x_next);
+		sc_get_function(&func);
+		err_status = sc_calculation(func, &y_next);
+		sc_destroy_deque(func);
+		if (!isnan(y_next) && !err_status) {
+			if (move_to) {
+				cairo_move_to(cr, transform->transform_x(transform, x),
+                              transform->transform_y(transform, y));
+				move_to = 0;
+			} else {
+				cairo_line_to(cr, transform->transform_x(transform, x),
+                              transform->transform_y(transform, y));
+			}
+			if (fabs((y_next - y) / (x_next - x)) > 1e6) {
+				move_to = 1;
+			}
+		} else {
+			move_to = 1;
+		}
+	}
+
+  	cairo_set_line_width(cr, 2);
+	cairo_stroke(cr);
+}
+
+/*
+static void drawing_plot(cairo_t *cr_src, int width, int height, \
+                         double dmin, double dmax, double emin, double emax) {
+	sc_deque_t *func;
+	double dif = dmax - dmin;
+	double emax_tmp = emax;
+	double emin_tmp = emin;
+	double dmax_tmp = dmax;
+	double dmin_tmp = dmin;
+	if (emax - emin > dif) {
+		dif = emax - emin;
+		double r = dif - (dmax - dmin);
+		r /= 2.0;
+		dmax += r;
+		dmin -= r;
+	} else {
+		double r = dif - (emax - emin);
+		r /= 2.0;
+		emax += r;
+		emin -= r;
+	}
+	double wscale = width / dif;
+	double hscale = height / dif;
+	double step = (dmax_tmp - dmin_tmp) / 1.0E5;
+	if (step < 1.e-7) {
+		step = 1.e-7;
+	}
+	double x, y, x_next, y_next;
+	int move_to = 1;
+	int err_status = 0;
+
+	(void) cr_src;
+	cairo_surface_t *surface =
+            cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    cairo_t *cr =
+            cairo_create (surface);
+	
+	// temporary variable
+
+	if (sc_function_status() == SC_FUNC_SET) {
+  		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+		for (x = dmin_tmp; x <= dmax_tmp; x += step) {
+			if (move_to) {
+				sc_set_variable(x);
+				sc_get_function(&func);
+				err_status = sc_calculation(func, &y);
+				func->clear(func);
+			} else {
+				x = x_next;
+				y = y_next;
+			}
+			if (isnan(y)) {
+				move_to = 1;
 				continue;
 			}
-			if (start) {
-				cairo_move_to(cr, x * s1 + width/2, height/2 - y  * s2); 
-				start = 0;
-			} else {
-				cairo_line_to(cr, x * s1 + width/2, height/2 - y * s2);
+			if (err_status == SC_DEVIDE_BY_ZERO) {
+				move_to = 1;
+				continue;
 			}
-			if (y > ef_max || y < ef_min || isnan(y) || isinf(y)) {
-				start = 1;
+			x_next = x + step;
+			sc_set_variable(x_next);
+			sc_get_function(&func);
+			err_status = sc_calculation(func, &y_next);
+			func->clear(func);
+			if (!isnan(y_next) && !err_status) {
+				if (move_to) {
+					cairo_move_to(cr, (x - (dmin + dif/2)) * wscale + width/2,
+                                       height/2 - (y - (emin + dif/2))  * hscale); 
+					move_to = 0;
+				} else {
+					cairo_line_to(cr, (x - (dmin + dif/2)) * wscale + width/2,
+                                       height/2 - (y - (emin + dif/2))  * hscale); 
+				}
+				if (fabs((y_next - y) / (x_next - x)) > 1e6) {
+					move_to = 1;
+				}
 			}
-		} 
-  		cairo_set_line_width (cr, 3);
+		}		
+  		cairo_set_line_width (cr, 2);
 		cairo_stroke (cr);
+
+		cairo_surface_t *tmp = cairo_get_target(cr);
+		cairo_set_source_surface(cr_src, tmp, 0, 0);
+		cairo_rectangle(cr_src, 0, height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
+                        width, (emax_tmp - emin_tmp) * hscale);
+		(void) emin_tmp;
+		cairo_fill(cr_src);
+		cairo_rectangle(cr_src, 0, height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
+                        width, (emax_tmp - emin_tmp) * hscale);
+		cairo_stroke(cr_src);
 	}
+	
+}
+*/
+
+static void drawing_adaptive_grid(cairo_t *cr_src,
+                                  int width, int height,
+                                  double dmin, double dmax,
+                                  double emin, double emax) {
+
+	double dif = dmax - dmin;
+	double emax_tmp = emax;
+	double emin_tmp = emin;
+	double dmax_tmp = dmax;
+	double dmin_tmp = dmin;
+	double r, wscale, hscale;
+	cairo_t *cr;
+	cairo_surface_t *surface;
+
+	if (emax - emin > dif) {
+		dif = emax - emin;
+		r = (dif - (dmax - dmin)) / 2.0;
+		dmax += r;
+		dmin -= r;
+	} else {
+		r = (dif - (emax - emin)) / 2.0;
+		emax += r;
+		emin -= r;
+	}
+	wscale = width / dif;
+	hscale = height / dif;
+
+	surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create (surface);
+  	cairo_set_source_rgb(cr, 0.909803922,  0.639215686, 0.090196078);
+	for (int a = 0; a < width; a += 40) {
+		cairo_move_to(cr, a, 0);
+		cairo_line_to(cr, a, height);
+		cairo_move_to(cr, 0, a);
+		cairo_line_to(cr, width, a);
+	}
+  	cairo_set_line_width (cr, 1);
+	cairo_stroke (cr);
+	surface = cairo_get_target(cr);
+	cairo_set_source_surface(cr_src, surface, 0, 0);
+	cairo_rectangle(cr_src, \
+                    width/2 + (dmin_tmp - (dmin + dif/2)) * wscale, \
+                    height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
+                    (dmax_tmp - dmin_tmp) * wscale, (emax_tmp - emin_tmp) * hscale);
+	cairo_fill(cr_src);
+	cairo_set_source_rgb(cr_src, 0.294117647, 0.0, 0.509803922);
+	cairo_rectangle(cr_src, \
+                    width/2 + (dmin_tmp - (dmin + dif/2)) * wscale, \
+                    height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
+                    (dmax_tmp - dmin_tmp) * wscale, (emax_tmp - emin_tmp) * hscale);
+	cairo_stroke(cr_src);
+
+	cairo_surface_destroy(surface);
+	cairo_destroy(cr);
 }
 

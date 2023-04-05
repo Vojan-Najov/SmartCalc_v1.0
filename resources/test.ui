@@ -378,8 +378,12 @@
 		    <property name="spacing">6</property>
             <child>
               <object class="GtkLabel" id="plot_lbl">
+                <attributes>
+                  <attribute name="weight" value="PANGO_WEIGHT_BOLD"/>
+                </attributes>
                 <property name="label">The function is not defined.</property>
                 <property name="halign">start</property>
+                <property name="wrap">TRUE</property>
               </object>
             </child>
             <child>
@@ -393,6 +397,7 @@
                 </child>
                 <child>
                   <object class="GtkEntry" id="df_min">
+                    <property name="placeholder-text">-10</property>
                   </object>
                 </child>
                 <child>
@@ -402,6 +407,7 @@
                 </child>
                 <child>
                   <object class="GtkEntry" id="df_max">
+                    <property name="placeholder-text">10</property>
                   </object>
                 </child>
               </object>
@@ -417,6 +423,7 @@
                 </child>
                 <child>
                   <object class="GtkEntry" id="ef_min">
+                    <property name="placeholder-text">-10</property>
                   </object>
                 </child>
                 <child>
@@ -426,6 +433,7 @@
                 </child>
                 <child>
                   <object class="GtkEntry" id="ef_max">
+                    <property name="placeholder-text">10</property>
                   </object>
                 </child>
               </object>

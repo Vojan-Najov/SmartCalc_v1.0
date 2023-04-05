@@ -17,4 +17,8 @@ void sc_unset_variable(void);
 
 int sc_get_variable(double *x);
 
+void sc_save_variable(void);
+
+void sc_restore_variable(void);
+
 #endif

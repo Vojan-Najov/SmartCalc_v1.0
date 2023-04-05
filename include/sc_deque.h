@@ -84,6 +84,8 @@ typedef struct sc_deque {
 
 sc_deque_t *sc_create_deque(void);
 
+void sc_destroy_deque(sc_deque_t *this);
+
 void sc_init_deque(sc_deque_t *deq);
 
 sc_deque_t *sc_copy_deque(sc_deque_t *src);

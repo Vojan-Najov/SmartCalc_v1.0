@@ -161,6 +161,11 @@ void sc_deque_clear(sc_deque_t *this) {
 	this->last = NULL;
 }
 
+void sc_destroy_deque(sc_deque_t *this) {
+	this->clear(this);
+	free(this);
+}
+
 sc_token_t *sc_deque_peek_back(sc_deque_t *this) {
 	return (&this->last->token);
 }
