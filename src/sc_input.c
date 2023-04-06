@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 int sc_input_term(char **str) {
 	static size_t size = 256;
@@ -14,7 +15,9 @@ int sc_input_term(char **str) {
 	if (line == NULL) {
 		line = (char *) malloc(sizeof(char) * size);
 	}
-	printf("> ");
+	if (isatty(STDOUT_FILENO)) {
+		printf("> ");
+	}
 	while (42) {
 		c = fgetc(stdin);
 		if (n >= size - 1) {
@@ -35,7 +38,7 @@ int sc_input_term(char **str) {
 	} else if (feof(stdin) && n == 0) {
 		printf("exit\n");
 		status = SC_INPUT_FAIL;
-	} else if (!strcmp(line, "exit")) {
+	} else if (!strncmp(line, "exit", 4)) {
 		status = SC_INPUT_FAIL;
 	} else {
 		line[n] = '\0'; 

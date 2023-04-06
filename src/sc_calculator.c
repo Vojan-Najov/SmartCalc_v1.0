@@ -299,16 +299,12 @@ static void sc_log(sc_token_t *operand) {
 static void sc_f(sc_token_t *operand) {
 	sc_deque_t *func_def;
 	sc_deque_t stack;
-	double var;
 	int err_status = 0;
-	int var_status = SC_VAR_UNSET;
 
 	sc_init_deque(&stack);
 	err_status = sc_get_function(&func_def);
 	if (!err_status) {
-		if (sc_get_variable(&var) == SC_VAR_SET) {
-			var_status = SC_VAR_SET;
-		}
+		sc_save_variable();
 		sc_set_variable(operand->value.num);
 		err_status = sc_calculate_aux(func_def, &stack, SC_IS_EXPRESSION);
 		if (!err_status) {
@@ -318,13 +314,8 @@ static void sc_f(sc_token_t *operand) {
 			}
 		}
 		stack.clear(&stack);
-		func_def->clear(func_def);
-		free(func_def);
-		if (var_status == SC_VAR_UNSET) {
-			sc_unset_variable();
-		} else {
-			sc_set_variable(var);
-		}
+		sc_destroy_deque(func_def);
+		sc_restore_variable();
 	}
 	if (err_status) {
 		operand->type = SC_WRONG_TOKEN;
