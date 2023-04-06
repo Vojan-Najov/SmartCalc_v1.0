@@ -34,6 +34,8 @@ static void plot_btn_clicked_cb(GtkButton *btn, gpointer data);
 
 static void construct_btn_clicked_cb(GtkButton *btn, gpointer data);
 
+static void entry_activate_cb(GtkEntry *self, gpointer data);
+
 static void draw_function(GtkDrawingArea *area, cairo_t *cr,
                           int width, int height, gpointer data);
 
@@ -79,6 +81,7 @@ static void app_activate_cb(GApplication *app) {
 	GtkBuilder *build;
 	GtkWidget *win;
 	GtkWidget *btn;
+	GtkWidget *entry;
 	const char *button_id_array[] = {
 		"clear_button", "lbracket_button", "rbracket_button",
 		"button0", "button1", "button2",
@@ -111,6 +114,9 @@ static void app_activate_cb(GApplication *app) {
 
 	btn = GTK_WIDGET(gtk_builder_get_object(build, "construct_graph_button"));
 	g_signal_connect(btn, "clicked", G_CALLBACK(construct_btn_clicked_cb), build);
+
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "ent"));
+	g_signal_connect(entry, "activate", G_CALLBACK(entry_activate_cb), build);
 
 	GtkWidget *area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(area), 800);
@@ -248,6 +254,7 @@ static void assign_btn_clicked_cb(GtkButton *btn, gpointer data) {
 
 	if (*str == '-' || g_ascii_isdigit(*str)) {
 		gtk_entry_buffer_set_text(entry_buf, str, -1);
+		gtk_editable_set_position(GTK_EDITABLE(entry), -1);
 	} else {
 		gtk_entry_buffer_delete_text(entry_buf, 0, entry_buf_len);
 	}
@@ -330,6 +337,15 @@ static void construct_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	(void) btn;
 	area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
 	gtk_widget_queue_draw(area);
+}
+
+static void entry_activate_cb(GtkEntry *self, gpointer data) {
+	GtkBuilder *build = GTK_BUILDER(data);
+	GtkWidget *btn;
+
+	(void) self;
+	btn = GTK_WIDGET(gtk_builder_get_object(build, "assign_button"));
+	gtk_widget_activate(btn);
 }
 
 static void draw_function(GtkDrawingArea *area, cairo_t *cr,
