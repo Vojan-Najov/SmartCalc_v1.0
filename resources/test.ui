@@ -21,7 +21,7 @@
                 <property name="vexpand">TRUE</property>
                 <child>
                   <object class="GtkTextView" id="tv">
-                    <property name="editable">TRUE</property>
+                    <property name="editable">FALSE</property>
                     <property name="can-focus">TRUE</property>
 				    <property name="wrap-mode">GTK_WRAP_WORD_CHAR</property>
                   </object>
