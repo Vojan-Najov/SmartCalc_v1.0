@@ -1,4 +1,5 @@
 NAME = SmartCalc_v1.0
+DIST_NAME = SmartCalc-1.0
 TEST = test
 REPORT = gcov_report
 
@@ -56,6 +57,12 @@ install: $(NAME)
 uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/$(NAME)
 
+dist: fclean
+	@$(MKDIR) $(DIST_NAME)
+	cp -r -f $(SRC_DIR) $(TEST_SRC_DIR) $(INCLD_DIR) README.md Makefile $(DIST_NAME)/
+	tar -czvf $(DIST_NAME).tar.gz $(DIST_NAME)
+	$(RM) -r $(DIST_NAME)
+
 $(TEST): $(NAME) $(TEST_OBJ)
 	$(CC) -g -o $@ $(TEST_OBJ) $(TEST_LIBS)
 	./$(TEST) 2>>/dev/null
@@ -93,6 +100,7 @@ fclean: clean
 	$(RM) $(NAME)
 	$(RM) $(TEST)
 	$(RM) -r $(GCOV_DIR)
+	$(RM) $(DIST_NAME).tar.gz
 
 format:
 	cp ../materials/linters/.clang-format $(SRC_DIR)/.
