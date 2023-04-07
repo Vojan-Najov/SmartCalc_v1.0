@@ -34,7 +34,9 @@ static void plot_btn_clicked_cb(GtkButton *btn, gpointer data);
 
 static void construct_btn_clicked_cb(GtkButton *btn, gpointer data);
 
-static void entry_activate_cb(GtkEntry *self, gpointer data);
+static void calc_entry_activate_cb(GtkEntry *self, gpointer data);
+
+static void plot_entry_activate_cb(GtkEntry *self, gpointer data);
 
 static void draw_function(GtkDrawingArea *area, cairo_t *cr,
                           int width, int height, gpointer data);
@@ -116,7 +118,16 @@ static void app_activate_cb(GApplication *app) {
 	g_signal_connect(btn, "clicked", G_CALLBACK(construct_btn_clicked_cb), build);
 
 	entry = GTK_WIDGET(gtk_builder_get_object(build, "ent"));
-	g_signal_connect(entry, "activate", G_CALLBACK(entry_activate_cb), build);
+	g_signal_connect(entry, "activate", G_CALLBACK(calc_entry_activate_cb), build);
+
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_min"));
+	g_signal_connect(entry, "activate", G_CALLBACK(plot_entry_activate_cb), build);
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_max"));
+	g_signal_connect(entry, "activate", G_CALLBACK(plot_entry_activate_cb), build);
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_min"));
+	g_signal_connect(entry, "activate", G_CALLBACK(plot_entry_activate_cb), build);
+	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_max"));
+	g_signal_connect(entry, "activate", G_CALLBACK(plot_entry_activate_cb), build);
 
 	GtkWidget *area = GTK_WIDGET(gtk_builder_get_object(build, "draw"));
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(area), 800);
@@ -339,7 +350,7 @@ static void construct_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	gtk_widget_queue_draw(area);
 }
 
-static void entry_activate_cb(GtkEntry *self, gpointer data) {
+static void calc_entry_activate_cb(GtkEntry *self, gpointer data) {
 	GtkBuilder *build = GTK_BUILDER(data);
 	GtkWidget *btn;
 
@@ -348,25 +359,46 @@ static void entry_activate_cb(GtkEntry *self, gpointer data) {
 	gtk_widget_activate(btn);
 }
 
+static void plot_entry_activate_cb(GtkEntry *self, gpointer data) {
+	GtkBuilder *build = GTK_BUILDER(data);
+	GtkWidget *btn;
+
+	(void) self;
+	btn = GTK_WIDGET(gtk_builder_get_object(build, "construct_graph_button"));
+	gtk_widget_activate(btn);
+}
+
 static void draw_function(GtkDrawingArea *area, cairo_t *cr,
                           int width, int height, gpointer data) {
 	GtkBuilder *build = GTK_BUILDER(data);
 	double dmin, dmax, emin, emax;
+	cairo_text_extents_t te;
+	const char *err_str = "Error: invalid values for D(f) or E(f)!";
+
 	(void) area;
 
 	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
 	cairo_paint_with_alpha(cr, 0.1);
 
 	get_df_ef(build, &dmin, &dmax, &emin, &emax);
-
-	drawing_coordinate_axes(cr, width, height);
+	if (dmax > dmin && emax > emin) {
+		drawing_coordinate_axes(cr, width, height);
 	
-	drawing_adaptive_grid(cr, width, height, dmin, dmax, emin, emax);
+		drawing_adaptive_grid(cr, width, height, dmin, dmax, emin, emax);
 
-	drawing_plot(cr, width, height, dmin, dmax, emin, emax);
+		drawing_plot(cr, width, height, dmin, dmax, emin, emax);
 
-	drawing_scale_x(cr, width, height, dmin, dmax, emin, emax);
-	drawing_scale_y(cr, width, height, dmin, dmax, emin, emax);
+		drawing_scale_x(cr, width, height, dmin, dmax, emin, emax);
+		drawing_scale_y(cr, width, height, dmin, dmax, emin, emax);
+	} else {
+		cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
+		cairo_select_font_face (cr, "Georgia",
+                                CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+		cairo_set_font_size (cr, 20);
+		cairo_text_extents (cr, err_str, &te);
+		cairo_move_to(cr, 40, 40);
+		cairo_show_text (cr, err_str);
+	}
 }
 
 static void drawing_coordinate_axes(cairo_t *cr, int width, int height) {
@@ -662,7 +694,7 @@ static void drawing_scale_x(cairo_t *cr, int width, int height,
 	sprintf(str, "%.2g", d);
 	cairo_save(cr);
 	cairo_text_extents (cr, str, &te);
-	cairo_translate(cr, source, height / 2);
+	cairo_translate(cr, source, 2 + height / 2);
 	cairo_rotate(cr, M_PI / 2);
 	cairo_move_to(cr, 0, 0);
 	cairo_show_text (cr, str);
@@ -673,7 +705,7 @@ static void drawing_scale_x(cairo_t *cr, int width, int height,
 		sprintf(str, "%.2g", tmp);
 		cairo_save(cr);
 		cairo_text_extents (cr, str, &te);
-		cairo_translate(cr, source - te.height, height / 2);
+		cairo_translate(cr, source - te.height, 2 + height / 2);
 		cairo_rotate(cr, M_PI / 2);
 		cairo_move_to(cr, 0, 0);
 		cairo_show_text (cr, str);
@@ -685,9 +717,9 @@ static void drawing_scale_x(cairo_t *cr, int width, int height,
 		sprintf(str, "%.2g", tmp);
 		cairo_save(cr);
 		cairo_text_extents (cr, str, &te);
-		cairo_translate(cr, source + te.height, height / 2);
+		cairo_translate(cr, source , height / 2 - te.width - 2);
 		cairo_text_extents (cr, str, &te);
-		cairo_rotate(cr, -M_PI / 2.0);
+		cairo_rotate(cr, M_PI / 2.0);
 		cairo_move_to(cr, 0, 0);
 		cairo_show_text (cr, str);
 		cairo_restore(cr);
@@ -713,14 +745,14 @@ static void drawing_scale_y(cairo_t *cr, int width, int height,
 	source = height / 2;
 	sprintf(str, "%.2g", d);
 	cairo_text_extents (cr, str, &te);
-	cairo_move_to(cr, width / 2, source);
+	cairo_move_to(cr, 2 + width / 2, source);
 	cairo_show_text (cr, str);
 
 	source = height / 2 - 40;
 	for (double tmp = d + delta; source >= 0; tmp += delta, source -= 40) {
 		sprintf(str, "%.2g", tmp);
 		cairo_text_extents (cr, str, &te);
-		cairo_move_to(cr, width/2, source + te.height);
+		cairo_move_to(cr, 2 + width/2, source + te.height);
 		cairo_show_text (cr, str);
 	}
 
@@ -728,7 +760,7 @@ static void drawing_scale_y(cairo_t *cr, int width, int height,
 	for (double tmp = d - delta; source <= height; tmp -= delta, source += 40) {
 		sprintf(str, "%.2g", tmp);
 		cairo_text_extents (cr, str, &te);
-		cairo_move_to(cr, width/2 - te.width, source);
+		cairo_move_to(cr, width/2 - te.width - 2, source);
 		cairo_show_text (cr, str);
 	}
 }
