@@ -31,27 +31,38 @@ RM = rm -f
 RMDIR = rm -rf
 PKG-CONFIG = $(shell which pkg-config)
 
-CFLAGS = -Wall -Wextra -Werror -std=c11 -I$(INCLD_DIR) -D_GNU_SOURCE
+ifeq ($(PREFIX),)
+    PREFIX := /usr/local
+endif
+
+CFLAGS = -g -Wall -Wextra -Werror -std=c11 -I$(INCLD_DIR) -D_GNU_SOURCE
 GTK_CFLAGS = $(shell $(PKG-CONFIG) --cflags gtk4)
 GCOV_FLAGS = -fprofile-arcs -ftest-coverage -g -O0
 
 LIBS = -lm
 GTK_LIBS = $(shell $(PKG-CONFIG) --libs gtk4)
 TEST_LIBS = -lcheck -lm
-#TEST_LIBS = -lcheck -lm -lsubunit
-
-$(NAME): $(OBJ)
-	$(CC) -o $@ $(OBJ) $(LIBS) $(GTK_LIBS)
+#TEST_LIBS += -lsubunit
 
 all: $(NAME)
 
-$(TEST): $(NAME) $(TEST_OBJ)
-	$(CC) $(TEST_OBJ) $(TEST_LIBS) -o $@
+$(NAME): $(OBJ)
+	$(CC) -g -o $@ $(OBJ) $(LIBS) $(GTK_LIBS)
 
-$(REPORT): $(GCOV_OBJ) $(TEST_OBJ)
+install: $(NAME)
+	install -d $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 $(NAME) $(DESTDIR)$(PREFIX)/bin/
+
+uninstall:
+	$(RM) $(DESTDIR)$(PREFIX)/bin/$(NAME)
+
+$(TEST): $(NAME) $(TEST_OBJ)
+	$(CC) -g -o $@ $(TEST_OBJ) $(TEST_LIBS)
+	./$(TEST) 2>>/dev/null
+
+$(REPORT): $(GCOV_OBJ) $(TEST)
 	$(CC) $(GCOV_FLAGS) $(GCOV_OBJ) -o $(NAME) $(LIBS) $(GTK_LIBS)
-	$(CC) $(TEST_OBJ) -o $(TEST) $(TEST_LIBS)
-	./$(TEST);
+	./$(TEST) 2>>/dev/null;
 	@$(RM) $(GCOV_OBJ_DIR)/sc_gui*
 	gcov $(GCOV_OBJ_DIR)/*.gcno;
 	@mv *.gcov $(GCOV_OBJ_DIR);
@@ -65,7 +76,7 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 
 $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c  $(TEST_INCLD)
 	@$(MKDIR) $(@D)
-	$(CC) $(CFLAGS) -I$(INCLD_DIR) -I$(TEST_INCLD_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(TEST_INCLD_DIR) -c $< -o $@
 
 $(GCOV_OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 	@$(MKDIR) $(@D)
@@ -93,4 +104,4 @@ check_ui:
 
 re: fclean all
 
-.PHONY: all clean fclean re format
+.PHONY: all install clean fclean re format check_ui
