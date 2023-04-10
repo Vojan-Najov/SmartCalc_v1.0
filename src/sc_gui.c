@@ -323,21 +323,19 @@ static void plot_btn_clicked_cb(GtkButton *btn, gpointer data) {
 	static int plot_open = 0;
 	GtkWidget *plot_boxv;
 	GtkWidget *win;
-	GtkStyleContext *btn_context;
 	GtkBuilder *build = GTK_BUILDER(data);
 
 	plot_boxv = GTK_WIDGET(gtk_builder_get_object(build, "plot_boxv"));
-	btn_context = gtk_widget_get_style_context(GTK_WIDGET(btn));
 
 	if (!plot_open) {
 		gtk_widget_set_visible(plot_boxv, TRUE);
-		gtk_style_context_add_class(btn_context, "suggested-action");
+		gtk_widget_add_css_class(GTK_WIDGET(btn), "suggested-action");
 		plot_open = 1;
 	} else {
 		gtk_widget_set_visible(plot_boxv, FALSE);
 		win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
 		gtk_window_set_default_size(GTK_WINDOW(win), 400, 500);
-		gtk_style_context_remove_class(btn_context, "suggested-action");
+		gtk_widget_remove_css_class(GTK_WIDGET(btn), "suggested-action");
 		plot_open = 0;
 	}
 }
