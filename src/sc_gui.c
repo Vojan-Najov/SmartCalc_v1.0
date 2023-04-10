@@ -19,6 +19,7 @@ typedef struct _sc_affine_transform {
 	double (*transform_y)(struct _sc_affine_transform *, double);
 } sc_affine_transform_t;
 
+
 static void app_activate_cb(GApplication *app);
 
 static void btn_clicked_cb(GtkButton *btn, gpointer data);
