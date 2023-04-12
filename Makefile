@@ -108,7 +108,7 @@ format:
 	$(RM) $(SRC_DIR)/.clang-format
 
 check_ui:
-	gtk4-builder-tool validate ./resources/test.ui
+	gtk4-builder-tool validate ./resources/smartcalc.ui
 
 re: fclean all
 
