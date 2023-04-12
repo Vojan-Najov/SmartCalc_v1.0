@@ -1,69 +1,127 @@
 #include "sc_error.h"
-#include "sc_lexer.h"
-#include "sc_scanner.h"
-#include "sc_parser.h"
 #include "sc_calculator.h"
 #include "sc_function.h"
 #include "sc_variable.h"
 #include "sc_plot.h"
 
-void draw_function(GtkDrawingArea *area, cairo_t *cr,
-                   int width, int height, gpointer data);
+static const char *entry_lbl[] = {
+	"df_min", "df_max",
+	"ef_min", "ef_max"
+};
+
+enum values {DF_MIN = 0, DF_MAX = 1, EF_MIN = 2, EF_MAX = 3};
+
+
+static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax,
+                      double *emin,  double *emax);
 
 static void drawing_coordinate_axes(cairo_t *cr, int width, int height);
 
-static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
-                      double *emin,  double *emax);
+static void drawing_plot(cairo_t *cr,
+                         int width, int height,
+                         double dmin, double dmax,
+                         double emin, double emax);
 
-static void drawing_plot(cairo_t *cr, int width, int height, \
-                         double dmin, double dmax, double emin, double emax);
+static void drawing_plot_cycle(cairo_t *cr_src,
+                               double dmin, double dmax, double step,
+                               sc_affine_transform_t *transform);
 
-static void drawing_plot_cycle(cairo_t *cr_src, double dmin, double dmax,
-                               double step, sc_affine_transform_t *transform);
+static void drawing_adaptive_grid(cairo_t *cr_src,
+                                  int width, int height,
+                                  double dmin, double dmax,
+                                  double emin, double emax);
 
-static void drawing_adaptive_grid(cairo_t *cr_src, int width, int height, \
-                         double dmin, double dmax, double emin, double emax);
+static void drawing_scale_x(cairo_t *cr,
+                            int width, int height,
+                            double dmin, double dmax,
+                            double emin, double emax);
 
-static void drawing_scale_x(cairo_t *cr, int width, int height,
-                          double dmin, double dmax, double emin, double emax);
-
-static void drawing_scale_y(cairo_t *cr, int width, int height,
-                          double dmin, double dmax, double emin, double emax);
+static void drawing_scale_y(cairo_t *cr,
+                            int width, int height,
+                            double dmin, double dmax,
+                            double emin, double emax);
 
 static double transformation_x(sc_affine_transform_t *transform, double x);
 
 static double transformation_y(sc_affine_transform_t *transform, double y);
 
+static void init_affine_transform(sc_affine_transform_t *transform,
+                                  double x0, double x1, double x2,
+                                  double y0, double y1, double y2);
+
+
 void draw_function(GtkDrawingArea *area, cairo_t *cr,
                           int width, int height, gpointer data) {
 	GtkBuilder *build = GTK_BUILDER(data);
 	double dmin, dmax, emin, emax;
-	cairo_text_extents_t te;
 	const char *err_str = "Error: invalid values for D(f) or E(f)!";
 
 	(void) area;
 
-	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-	cairo_paint_with_alpha(cr, 0.1);
-
 	get_df_ef(build, &dmin, &dmax, &emin, &emax);
+
 	if (dmax > dmin && emax > emin) {
 		drawing_coordinate_axes(cr, width, height);
-	
 		drawing_adaptive_grid(cr, width, height, dmin, dmax, emin, emax);
-
 		drawing_plot(cr, width, height, dmin, dmax, emin, emax);
-
 		drawing_scale_x(cr, width, height, dmin, dmax, emin, emax);
 		drawing_scale_y(cr, width, height, dmin, dmax, emin, emax);
 	} else {
 		cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
 		cairo_select_font_face (cr, "Georgia",
-                                CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+                                CAIRO_FONT_SLANT_NORMAL,
+                                CAIRO_FONT_WEIGHT_BOLD);
 		cairo_set_font_size (cr, 20);
-		cairo_text_extents (cr, err_str, &te);
 		cairo_move_to(cr, 40, 40);
 		cairo_show_text (cr, err_str);
+	}
+}
+
+static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
+                      double *emin,  double *emax) {
+	GtkWidget *entry;
+	GtkEntryBuffer *entry_buf;
+	const char *bufstr;
+	double num;
+
+	for (size_t i = 0; i < sizeof(entry_lbl)/sizeof(const char *); ++i) {
+		entry = GTK_WIDGET(gtk_builder_get_object(build, entry_lbl[i]));
+		entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
+		bufstr = gtk_entry_buffer_get_text(entry_buf);
+		if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
+			switch ((int)i) {
+				case DF_MIN:
+				case EF_MIN:
+					num = -10.0;
+					break;
+				case DF_MAX:
+				case EF_MAX:
+					num = 10.0;
+					break;
+			}
+		} else {
+			num = g_ascii_strtod(bufstr, NULL);
+			if (num > 1.0E6) {
+				num = 1.0E6;
+			} else if (num < -1.0E6) {
+				num = -1.0E6;
+			}
+		}
+		switch ((int)i) {
+			case DF_MIN:
+				*dmin = num;
+				break;
+			case DF_MAX:
+				*dmax = num;
+				break;
+			case EF_MIN:
+				*emin = num;
+				break;
+			case EF_MAX:
+				*emax = num;
+				break;
+		}
+		
 	}
 }
 
@@ -78,9 +136,9 @@ static void drawing_coordinate_axes(cairo_t *cr, int width, int height) {
   	cairo_set_line_width (cr, 2);
   	cairo_stroke (cr);
 
-	cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
 	cairo_select_font_face (cr, "Georgia",
-                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+                            CAIRO_FONT_SLANT_NORMAL,
+                            CAIRO_FONT_WEIGHT_BOLD);
 	cairo_set_font_size (cr, 15);
 
 	cairo_text_extents (cr, "x", &te);
@@ -90,74 +148,6 @@ static void drawing_coordinate_axes(cairo_t *cr, int width, int height) {
 	cairo_text_extents (cr, "f(x)", &te);
 	cairo_move_to(cr, (double)width/2.0 - te.width - 4, te.height);
 	cairo_show_text (cr, "f(x)");
-}
-
-static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax, \
-                      double *emin,  double *emax) {
-	GtkWidget *entry;
-	GtkEntryBuffer *entry_buf;
-	const char *bufstr;
-	double num;
-
-	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_min"));
-	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
-	bufstr = gtk_entry_buffer_get_text(entry_buf);
-	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
-		num = -10.0;
-	} else {
-		num = g_ascii_strtod(bufstr, NULL);
-		if (num > 1.0E6) {
-			num = 1.0E6;
-		} else if (num < -1.0E6) {
-			num = -1.0E6;
-		}
-	}
-	*dmin = num;
-
-	entry = GTK_WIDGET(gtk_builder_get_object(build, "df_max"));
-	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
-	bufstr = gtk_entry_buffer_get_text(entry_buf);
-	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
-		num = 10.0;
-	} else {
-		num = g_ascii_strtod(bufstr, NULL);
-		if (num > 1.0E6) {
-			num = 1.0E6;
-		} else if (num < -1.0E6) {
-			num = -1.0E6;
-		}
-	}
-	*dmax = num;
-
-	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_min"));
-	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
-	bufstr = gtk_entry_buffer_get_text(entry_buf);
-	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
-		num = -10.0;
-	} else {
-		num = g_ascii_strtod(bufstr, NULL);
-		if (num > 1.0E6) {
-			num = 1.0E6;
-		} else if (num < -1.0E6) {
-			num = -1.0E6;
-		}
-	}
-	*emin = num;
-
-	entry = GTK_WIDGET(gtk_builder_get_object(build, "ef_max"));
-	entry_buf = gtk_entry_get_buffer(GTK_ENTRY(entry));
-	bufstr = gtk_entry_buffer_get_text(entry_buf);
-	if (!*bufstr && (*bufstr != '-' || !g_ascii_isdigit(*bufstr))) {
-		num = 10.0;
-	} else {
-		num = g_ascii_strtod(bufstr, NULL);
-		if (num > 1.0E6) {
-			num = 1.0E6;
-		} else if (num < -1.0E6) {
-			num = -1.0E6;
-		}
-	}
-	*emax = num;
 }
 
 static double transformation_x(sc_affine_transform_t *transform, double x) {
