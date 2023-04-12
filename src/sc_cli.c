@@ -16,8 +16,9 @@ int smartcalc_cli(void) {
 	int err_status = 0;
 	char *str = NULL;
 
+	sc_init_deque(&lexems);
+	sc_init_deque(&rpn);
 	while(sc_input_term(&str)) {
-		sc_init_deque(&lexems);
 		err_status = sc_lexer(str, &lexems);
 		if (err_status) {
 			sc_cli_error_lexer(err_status, &lexems);
@@ -28,7 +29,6 @@ int smartcalc_cli(void) {
 			sc_cli_error_scanner(&lexems);
 			continue;
 		}
-		sc_init_deque(&rpn);
 		err_status = sc_parser(&lexems, &rpn);
 		lexems.clear(&lexems);
 		if (err_status) {
