@@ -17,6 +17,11 @@ static void get_df_ef(GtkBuilder *build, double *dmin, double *dmax,
 
 static void drawing_coordinate_axes(cairo_t *cr, int width, int height);
 
+static void drawing_adaptive_grid(cairo_t *cr_src,
+                                  int width, int height,
+                                  double dmin, double dmax,
+                                  double emin, double emax);
+
 static void drawing_plot(cairo_t *cr,
                          int width, int height,
                          double dmin, double dmax,
@@ -25,11 +30,6 @@ static void drawing_plot(cairo_t *cr,
 static void drawing_plot_cycle(cairo_t *cr_src,
                                double dmin, double dmax, double step,
                                sc_affine_transform_t *transform);
-
-static void drawing_adaptive_grid(cairo_t *cr_src,
-                                  int width, int height,
-                                  double dmin, double dmax,
-                                  double emin, double emax);
 
 static void drawing_scale_x(cairo_t *cr,
                             int width, int height,
@@ -171,8 +171,65 @@ static void init_affine_transform(sc_affine_transform_t *transform,
 	transform->transform_y = &transformation_y;
 }
 
-static void drawing_plot(cairo_t *cr_src, int width, int height, \
-                         double dmin, double dmax, double emin, double emax) {
+static void drawing_adaptive_grid(cairo_t *cr_src,
+                                  int width, int height,
+                                  double dmin, double dmax,
+                                  double emin, double emax) {
+	double dif = dmax - dmin;
+	double emax_tmp = emax, emin_tmp = emin;
+	double dmax_tmp = dmax, dmin_tmp = dmin;
+	double r, wscale, hscale;
+	cairo_t *cr;
+	cairo_surface_t *surface;
+
+	if (emax - emin > dif) {
+		dif = emax - emin;
+		r = (dif - (dmax - dmin)) / 2.0;
+		dmax += r;
+		dmin -= r;
+	} else {
+		r = (dif - (emax - emin)) / 2.0;
+		emax += r;
+		emin -= r;
+	}
+	wscale = width / dif;
+	hscale = height / dif;
+
+	surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+                                         width, height);
+    cr = cairo_create (surface);
+  	cairo_set_source_rgb(cr, 0.909803922,  0.639215686, 0.090196078);
+	for (int a = 0; a < width; a += 40) {
+		cairo_move_to(cr, a, 0);
+		cairo_line_to(cr, a, height);
+		cairo_move_to(cr, 0, a);
+		cairo_line_to(cr, width, a);
+	}
+  	cairo_set_line_width (cr, 1);
+	cairo_stroke (cr);
+	surface = cairo_get_target(cr);
+	cairo_set_source_surface(cr_src, surface, 0, 0);
+	cairo_rectangle(cr_src,
+                    width/2 + (dmin_tmp - (dmin + dif/2)) * wscale,
+                    height/2 - (emax_tmp - (emin + dif/2)) * hscale,
+                    (dmax_tmp - dmin_tmp) * wscale,
+                    (emax_tmp - emin_tmp) * hscale);
+	cairo_fill(cr_src);
+	cairo_set_source_rgb(cr_src, 0.294117647, 0.0, 0.509803922);
+	cairo_rectangle(cr_src,
+                    width/2 + (dmin_tmp - (dmin + dif/2)) * wscale,
+                    height/2 - (emax_tmp - (emin + dif/2)) * hscale,
+                    (dmax_tmp - dmin_tmp) * wscale,
+                    (emax_tmp - emin_tmp) * hscale);
+	cairo_stroke(cr_src);
+
+	cairo_surface_destroy(surface);
+	cairo_destroy(cr);
+}
+
+static void drawing_plot(cairo_t *cr_src, int width, int height,
+                         double dmin, double dmax,
+                         double emin, double emax) {
 	double dif = dmax - dmin;
 	double emax_tmp = emax;
 	double emin_tmp = emin;
@@ -201,33 +258,34 @@ static void drawing_plot(cairo_t *cr_src, int width, int height, \
 
 	if (sc_function_status() == SC_FUNC_SET) {
 		sc_save_variable();
-
-		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+                                              width, height);
     	cr = cairo_create (surface);
-
 		init_affine_transform(&transform,
-                              -(dmin + dif / 2.0), wscale, (double)width / 2.0,
-                              -(emin + dif / 2.0), -hscale, (double)height / 2.0);
-
+                              -(dmin + dif / 2.0), wscale,
+                              (double)width / 2.0,
+                              -(emin + dif / 2.0), -hscale,
+                              (double)height / 2.0);
 		drawing_plot_cycle(cr, dmin_tmp, dmax_tmp, step, &transform);
-
 		surface = cairo_get_target(cr);
 		cairo_set_source_surface(cr_src, surface, 0, 0);
-		cairo_rectangle(cr_src, 0, transform.transform_y(&transform, emax_tmp),
+		cairo_rectangle(cr_src, 0,
+                        transform.transform_y(&transform, emax_tmp),
                         width, (emax_tmp - emin_tmp) * hscale);
 		cairo_fill(cr_src);
-		cairo_rectangle(cr_src, 0, transform.transform_y(&transform, emax_tmp),
+		cairo_rectangle(cr_src, 0,
+                        transform.transform_y(&transform, emax_tmp),
                         width, (emax_tmp - emin_tmp) * hscale);
 		cairo_stroke(cr_src);
-
 		cairo_surface_destroy(surface);
 		cairo_destroy(cr);
 		sc_restore_variable();
 	}
 }
 
-static void drawing_plot_cycle(cairo_t *cr, double dmin, double dmax,
-                               double step, sc_affine_transform_t *transform) {
+static void drawing_plot_cycle(cairo_t *cr,
+                               double dmin, double dmax, double step,
+                               sc_affine_transform_t *transform) {
 	double x, y;
 	double x_next, y_next;
 	sc_deque_t *func;
@@ -276,74 +334,22 @@ static void drawing_plot_cycle(cairo_t *cr, double dmin, double dmax,
 	cairo_stroke(cr);
 }
 
-static void drawing_adaptive_grid(cairo_t *cr_src,
-                                  int width, int height,
-                                  double dmin, double dmax,
-                                  double emin, double emax) {
-	double dif = dmax - dmin;
-	double emax_tmp = emax;
-	double emin_tmp = emin;
-	double dmax_tmp = dmax;
-	double dmin_tmp = dmin;
-	double r, wscale, hscale;
-	cairo_t *cr;
-	cairo_surface_t *surface;
-
-	if (emax - emin > dif) {
-		dif = emax - emin;
-		r = (dif - (dmax - dmin)) / 2.0;
-		dmax += r;
-		dmin -= r;
-	} else {
-		r = (dif - (emax - emin)) / 2.0;
-		emax += r;
-		emin -= r;
-	}
-	wscale = width / dif;
-	hscale = height / dif;
-
-	surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create (surface);
-  	cairo_set_source_rgb(cr, 0.909803922,  0.639215686, 0.090196078);
-	for (int a = 0; a < width; a += 40) {
-		cairo_move_to(cr, a, 0);
-		cairo_line_to(cr, a, height);
-		cairo_move_to(cr, 0, a);
-		cairo_line_to(cr, width, a);
-	}
-  	cairo_set_line_width (cr, 1);
-	cairo_stroke (cr);
-	surface = cairo_get_target(cr);
-	cairo_set_source_surface(cr_src, surface, 0, 0);
-	cairo_rectangle(cr_src, \
-                    width/2 + (dmin_tmp - (dmin + dif/2)) * wscale, \
-                    height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
-                    (dmax_tmp - dmin_tmp) * wscale, (emax_tmp - emin_tmp) * hscale);
-	cairo_fill(cr_src);
-	cairo_set_source_rgb(cr_src, 0.294117647, 0.0, 0.509803922);
-	cairo_rectangle(cr_src, \
-                    width/2 + (dmin_tmp - (dmin + dif/2)) * wscale, \
-                    height/2 - (emax_tmp - (emin + dif/2)) * hscale, \
-                    (dmax_tmp - dmin_tmp) * wscale, (emax_tmp - emin_tmp) * hscale);
-	cairo_stroke(cr_src);
-
-	cairo_surface_destroy(surface);
-	cairo_destroy(cr);
-}
-
-static void drawing_scale_x(cairo_t *cr, int width, int height,
-                          double dmin, double dmax, double emin, double emax) {
+static void drawing_scale_x(cairo_t *cr,
+                            int width, int height,
+                            double dmin, double dmax,
+                            double emin, double emax) {
 	cairo_text_extents_t te;
-	double d, delta;
+	double d, delta, tmp;
 	int source;
 	char str[256];
 
 	cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
 	cairo_select_font_face (cr, "Georgia",
-                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+                            CAIRO_FONT_SLANT_NORMAL,
+                            CAIRO_FONT_WEIGHT_BOLD);
 	cairo_set_font_size (cr, 10);
 
-	delta = (dmax - dmin > emax - emin) ? (dmax - dmin)/20.0 : (emax - emin)/20.0;
+	delta = (dmax-dmin > emax-emin) ? (dmax-dmin)/20.0 : (emax-emin)/20.0;
 
 	d = (dmin + dmax) / 2.0;
 	source = width / 2;
@@ -357,7 +363,7 @@ static void drawing_scale_x(cairo_t *cr, int width, int height,
 	cairo_restore(cr);
 
 	source = width / 2 + 40;
-	for (double tmp = d + delta; source <= width; tmp += delta, source += 40) {
+	for (tmp = d + delta; source <= width; tmp += delta, source += 40) {
 		sprintf(str, "%.2g", tmp);
 		cairo_save(cr);
 		cairo_text_extents (cr, str, &te);
@@ -369,7 +375,7 @@ static void drawing_scale_x(cairo_t *cr, int width, int height,
 	}
 
 	source = width / 2 - 40;
-	for (double tmp = d - delta; source >= 0; tmp -= delta, source -= 40) {
+	for (tmp = d - delta; source >= 0; tmp -= delta, source -= 40) {
 		sprintf(str, "%.2g", tmp);
 		cairo_save(cr);
 		cairo_text_extents (cr, str, &te);
@@ -382,19 +388,22 @@ static void drawing_scale_x(cairo_t *cr, int width, int height,
 	}
 }
 
-static void drawing_scale_y(cairo_t *cr, int width, int height,
-                          double dmin, double dmax, double emin, double emax) {
+static void drawing_scale_y(cairo_t *cr,
+                            int width, int height,
+                            double dmin, double dmax,
+                            double emin, double emax) {
 	cairo_text_extents_t te;
-	double d, delta;
+	double d, delta, tmp;
 	int source;
 	char str[256];
 
 	cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
 	cairo_select_font_face (cr, "Georgia",
-                            CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+                            CAIRO_FONT_SLANT_NORMAL,
+                            CAIRO_FONT_WEIGHT_BOLD);
 	cairo_set_font_size (cr, 10);
 
-	delta = (dmax - dmin > emax - emin) ? (dmax - dmin)/20.0 : (emax - emin)/20.0;
+	delta = (dmax-dmin > emax-emin) ? (dmax-dmin)/20.0 : (emax-emin)/20.0;
 
 	d = (emin + emax) / 2.0;
 
@@ -405,7 +414,7 @@ static void drawing_scale_y(cairo_t *cr, int width, int height,
 	cairo_show_text (cr, str);
 
 	source = height / 2 - 40;
-	for (double tmp = d + delta; source >= 0; tmp += delta, source -= 40) {
+	for (tmp = d + delta; source >= 0; tmp += delta, source -= 40) {
 		sprintf(str, "%.2g", tmp);
 		cairo_text_extents (cr, str, &te);
 		cairo_move_to(cr, 2 + width/2, source + te.height);
@@ -413,7 +422,7 @@ static void drawing_scale_y(cairo_t *cr, int width, int height,
 	}
 
 	source = height / 2 + 40;
-	for (double tmp = d - delta; source <= height; tmp -= delta, source += 40) {
+	for (tmp = d - delta; source <= height; tmp -= delta, source += 40) {
 		sprintf(str, "%.2g", tmp);
 		cairo_text_extents (cr, str, &te);
 		cairo_move_to(cr, width/2 - te.width - 2, source);
