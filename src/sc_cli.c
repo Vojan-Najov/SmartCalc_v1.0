@@ -42,7 +42,7 @@ int smartcalc_cli(void) {
 		} else if (expr_type == SC_EXPRESSION) {
 			err_status = sc_calculation(&rpn, &result);
 			if (!err_status) {
-				printf("%.16g\n", result);
+				fprintf(stdout, "%.16g\n", result);
 			}
 		}
 		if (err_status) {

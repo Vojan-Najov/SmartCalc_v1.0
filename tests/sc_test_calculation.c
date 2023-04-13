@@ -55,7 +55,7 @@ END_TEST
 
 START_TEST(test_05) {
 	char buf[512];
-	const char *in = "371.12 ^ 2.34";
+	const char *in = "371.12 ^ 2.34\n";
 	double result = pow(371.12, 2.34);
 	const char *out = get_smartcalc_result(in);
 
@@ -67,7 +67,7 @@ END_TEST
 
 START_TEST(test_06) {
 	char buf[512];
-	const char *in = "371.12 mod 2.34";
+	const char *in = "371.12 mod 2.34\n";
 	double result = fmod(371.12, 2.34);
 	const char *out = get_smartcalc_result(in);
 
@@ -79,7 +79,7 @@ END_TEST
 
 START_TEST(test_07) {
 	char buf[512];
-	const char *in = "sin(271.38)";
+	const char *in = "sin(271.38)\n";
 	double result = sin(271.38);
 	const char *out = get_smartcalc_result(in);
 
@@ -91,7 +91,7 @@ END_TEST
 
 START_TEST(test_08) {
 	char buf[512];
-	const char *in = "cos(271.38)";
+	const char *in = "cos(271.38)\n";
 	double result = cos(271.38);
 	const char *out = get_smartcalc_result(in);
 
@@ -103,7 +103,7 @@ END_TEST
 
 START_TEST(test_09) {
 	char buf[512];
-	const char *in = "tan(271.38)";
+	const char *in = "tan(271.38)\n";
 	double result = tan(271.38);
 	const char *out = get_smartcalc_result(in);
 
@@ -115,7 +115,7 @@ END_TEST
 
 START_TEST(test_10) {
 	char buf[512];
-	const char *in = "asin(0.98)";
+	const char *in = "asin(0.98)\n";
 	double result = asin(0.98);
 	const char *out = get_smartcalc_result(in);
 
@@ -127,7 +127,7 @@ END_TEST
 
 START_TEST(test_11) {
 	char buf[512];
-	const char *in = "acos(0.98)";
+	const char *in = "acos(0.98)\n";
 	double result = acos(0.98);
 	const char *out = get_smartcalc_result(in);
 
@@ -139,7 +139,7 @@ END_TEST
 
 START_TEST(test_12) {
 	char buf[512];
-	const char *in = "atan(0.98)";
+	const char *in = "atan(0.98)\n";
 	double result = atan(0.98);
 	const char *out = get_smartcalc_result(in);
 
@@ -151,7 +151,7 @@ END_TEST
 
 START_TEST(test_13) {
 	char buf[512];
-	const char *in = "ln(5647.12)";
+	const char *in = "ln(5647.12)\n";
 	double result = log(5647.12);
 	const char *out = get_smartcalc_result(in);
 
@@ -163,7 +163,7 @@ END_TEST
 
 START_TEST(test_14) {
 	char buf[512];
-	const char *in = "log(17.83)";
+	const char *in = "log(17.83)\n";
 	double result = log(17.83)/log(10);
 	const char *out = get_smartcalc_result(in);
 
@@ -175,7 +175,7 @@ END_TEST
 
 START_TEST(test_15) {
 	char buf[512];
-	const char *in = "sqrt(1739377.83)";
+	const char *in = "sqrt(1739377.83)\n";
 	double result = sqrt(1739377.83);
 	const char *out = get_smartcalc_result(in);
 
@@ -187,7 +187,7 @@ END_TEST
 
 START_TEST(test_16) {
 	char buf[512];
-	const char *in = "-2837.287 + -26616.1271 - +17.4";
+	const char *in = "-2837.287 + -26616.1271 - +17.4\n";
 	double result = -2837.287 + -26616.1271 - +17.4;
 	const char *out = get_smartcalc_result(in);
 
@@ -239,7 +239,7 @@ START_TEST(test_20) {
 					 "61 + 62 + 63 + 64 + 65 + 66 + 67 + 68 + 69 +" \
 					 "71 + 72 + 73 + 74 + 75 + 76 + 77 + 78 + 79 +" \
 					 "81 + 82 + 83 + 84 + 85 + 86 + 87 + 88 + 89 +" \
-					 "91 + 92 + 93 + 94 + 95 + 96 + 87 + 98 + 99";
+					 "91 + 92 + 93 + 94 + 95 + 96 + 87 + 98 + 99\n";
 	double result = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 +
 					11 + 12 + 13 + 14 + 15 + 16 + 17 + 18 + 19 +
 					21 + 22 + 23 + 24 + 25 + 26 + 27 + 28 + 29 +

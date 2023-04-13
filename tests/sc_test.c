@@ -30,6 +30,7 @@ static int run_test_suite(Suite *test_suite) {
 	SRunner *sr;
 
 	sr = srunner_create(test_suite);
+	srunner_set_fork_status (sr, CK_NOFORK);
 	srunner_run_all(sr, CK_NORMAL);
 	number_failed = srunner_ntests_failed(sr);
 	srunner_free(sr);
@@ -84,11 +85,17 @@ const char *get_smartcalc_result(const char *str) {
 
 			nbytes = read(fd2[0], buf, BSIZE);
 			close(fd2[0]);
+
 			if (nbytes == -1) {
 				perror("read error");
 				exit(EXIT_FAILURE);
 			}
-			ret = buf;
+
+			if (nbytes == 0) {
+				ret = "";
+			} else {
+				ret = buf;
+			}
 			nl_ptr = strchr(ret, '\n');
 			if (nl_ptr != NULL) {
 				*nl_ptr = '\0';

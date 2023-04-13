@@ -19,13 +19,13 @@ int sc_input_term(char **str) {
 	if (isatty(STDOUT_FILENO)) {
 		printf("> ");
 	}
-	while (42) {
-		c = fgetc(stdin);
+
+	while ((c = fgetc(stdin)) != EOF) {
 		if (n >= size - 1) {
 			size *= 2;
 			line = realloc(line, size);
 		}
-		if (line == NULL || c == '\n' || c == EOF) {
+		if (line == NULL || c == '\n') {
 			break;
 		} else {
 			line[n] = c;
@@ -34,13 +34,13 @@ int sc_input_term(char **str) {
 	}
 	if (line == NULL) {
 		sc_error_input_alloc();
-	} else if (ferror(stdin)) {
-		sc_error_input(line);
 	} else if (feof(stdin) && n == 0) {
-		printf("exit\n");
+		fprintf(stdout, "exit\n");
 		status = SC_INPUT_FAIL;
 	} else if (!strncmp(line, "exit", 4)) {
 		status = SC_INPUT_FAIL;
+	} else if (ferror(stdin)) {
+		sc_error_input(line);
 	} else {
 		line[n] = '\0'; 
 	}
