@@ -31,9 +31,11 @@ MKDIR = mkdir -p
 RM = rm -f
 RMDIR = rm -rf
 PKG-CONFIG = $(shell which pkg-config)
+#PKG-CONFIG = /opt/goinfre/ccartman/homebrew/bin/pkg-config
 
 ifeq ($(PREFIX),)
-    PREFIX := /usr/local
+    #PREFIX := /usr/local
+    PREFIX := ~
 endif
 
 CFLAGS = -g -Wall -Wextra -Werror -std=c11 -I$(INCLD_DIR) -D_GNU_SOURCE
@@ -71,6 +73,7 @@ $(REPORT): $(GCOV_OBJ) $(TEST)
 	$(CC) $(GCOV_FLAGS) $(GCOV_OBJ) -o $(NAME) $(LIBS) $(GTK_LIBS)
 	./$(TEST) 2>>/dev/null;
 	@$(RM) $(GCOV_OBJ_DIR)/sc_gui*
+	@$(RM) $(GCOV_OBJ_DIR)/sc_plot*
 	gcov $(GCOV_OBJ_DIR)/*.gcno;
 	@mv *.gcov $(GCOV_OBJ_DIR);
 	lcov -c -t "s21_string" -o $(GCOV_DIR)/report.info -d $(GCOV_OBJ_DIR) \
