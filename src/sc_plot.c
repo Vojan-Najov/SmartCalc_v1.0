@@ -51,7 +51,7 @@ static void init_affine_transform(sc_affine_transform_t *transform,
 
 
 void draw_function(GtkDrawingArea *area, cairo_t *cr,
-                          int width, int height, gpointer data) {
+                   int width, int height, gpointer data) {
 	GtkBuilder *build = GTK_BUILDER(data);
 	double dmin, dmax, emin, emax;
 	const char *err_str = "Error: invalid values for D(f) or E(f)!";
