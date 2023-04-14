@@ -13,8 +13,8 @@ Implementation of calculator.
 - Supports the assignment operation to a variable (`x = expr`). It is possible to set only one variable named x
 - Supports the definition a function from a single variable (`f = expr`)
 - `$>make` for compilation:
-- The program works in two modes: \
+- The program works in two modes:
   - `$>./Smartcalc -t` for the command line interface mode \
-  <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
+    <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
   - `$>./Smartcalc` for the graphic user interface \
-  <img src="./docs/misc/sc_2.png" alt="sc_2" width="700"/>
+    <img src="./docs/misc/sc_2.png" alt="sc_2" width="700"/>
