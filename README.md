@@ -12,6 +12,5 @@ Implementation of calculator.
   - `$>./Smartcalc -t` for the command line interface mode
   - Supports arithmetic operations: unary plus(`+`) and minus(`-`), binary addition(`+`), subtraction(`-`), multiplication(`*`), division(`/`), modulus(`mod`) and exponentiation(`^`).
   - Supports functions: sine(`sin`), cosine(`cos`), tangent(`tan`), arcsine(`asin`), arccosine(`acos`), arctangent(`atan`), square root(`sqrt`), natural logarithm(`ln`) and decimal logarithm(`log`)
-
-supports any number of operator brackets
+  - Supports any number of operator brackets
   <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
