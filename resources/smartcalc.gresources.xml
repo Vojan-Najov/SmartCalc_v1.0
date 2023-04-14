@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <gresources>
+  <gresource prefix="/com/github/Vojan-Najov/Smartcalc_v1-0">
+   <file>smartcalc.ui</file>
+  </gresource>
+ </gresources>

@@ -66,7 +66,8 @@ static void app_activate_cb(GApplication *app) {
 	GtkWidget *entry;
 	size_t i;
 
-	build = gtk_builder_new_from_file("./resources/smartcalc.ui");
+	build = gtk_builder_new_from_resource(
+                  "/com/github/Vojan-Najov/Smartcalc_v1-0/smartcalc.ui");
 
 	win = GTK_WIDGET(gtk_builder_get_object(build, "win"));
 	gtk_window_set_application(GTK_WINDOW(win), GTK_APPLICATION(app));
