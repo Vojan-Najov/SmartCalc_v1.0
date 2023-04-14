@@ -7,12 +7,14 @@ Implementation of calculator.
 
 ## Usage
 - The program is written in C using the GTK4 framework.
+- Supports arithmetic operations: unary plus(`+`) and minus(`-`), binary addition(`+`), subtraction(`-`), multiplication(`*`), division(`/`), modulus(`mod`) and exponentiation(`^`).
+- Supports functions: sine(`sin`), cosine(`cos`), tangent(`tan`), arcsine(`asin`), arccosine(`acos`), arctangent(`atan`), square root(`sqrt`), natural logarithm(`ln`) and decimal logarithm(`log`)
+- Supports any number of operator brackets
+- Supports the assignment operation to a variable (`x = expr`). It is possible to set only one variable named x
+- Supports the definition a function from a single variable (`f = expr`)
 - `$>make` for compilation:
 - The program works in two modes:
   - `$>./Smartcalc -t` for the command line interface mode
-  - Supports arithmetic operations: unary plus(`+`) and minus(`-`), binary addition(`+`), subtraction(`-`), multiplication(`*`), division(`/`), modulus(`mod`) and exponentiation(`^`).
-  - Supports functions: sine(`sin`), cosine(`cos`), tangent(`tan`), arcsine(`asin`), arccosine(`acos`), arctangent(`atan`), square root(`sqrt`), natural logarithm(`ln`) and decimal logarithm(`log`)
-  - Supports any number of operator brackets
-  - Supports the assignment operation to a variable (`x = expr`). It is possible to set only one variable named x
-  - Supports the definition a function from a single variable (`f = expr`)
   <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
+  - `$>./Smartcalc` for the graphic user interface
+  <img src="./docs/misc/sc_2.png" alt="sc_2" width="700"/>
