@@ -1,8 +1,5 @@
 # SmartCalc v1.0
 
-> При старте работы над проектом просим вас постараться хронометрировать время работы над проектом.
-> По завершении работы над проектом просим вас ответить на два вопроса [в этом опросе](https://forms.gle/MAxcabZjBPmTmhPv5)
-
 Implementation of SmartCalc v1.0.
 
 The russian version of the task can be found in the repository.
@@ -240,6 +237,3 @@ Provide a special mode "deposit profitability calculator" (you can take banki.ru
 - Input: deposit amount, deposit term, interest rate, tax rate, periodicity of payments, capitalization of interest, replenishments list, partial withdrawals list
 - Output: accrued interest, tax amount, deposit amount by the end of the term
 
-
-
-💡 [Tap here](https://forms.yandex.ru/cloud/6418155a6938722388a12878/) **to leave your feedback on the project**. Pedago Team really tries to make your educational experience better.
