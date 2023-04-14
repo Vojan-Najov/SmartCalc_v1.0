@@ -114,6 +114,8 @@ dvi: ./docs/smartcalc.texi
 	texi2dvi $<
 	$(RM) smartcalc.aux smartcalc.cp smartcalc.log smartcalc.toc \
 		smartcalc.cps
+#	dvipdfmx ./smartcalc.dvi
+#	open ./smartcalc.pdf
 
 clean:
 	$(RM) $(OBJ)
