@@ -110,6 +110,11 @@ $(GCOV_OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 	@$(MKDIR) $(@D)
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(GCOV_FLAGS) -I$(INCLD_DIR) -c $< -o $@
 
+dvi: ./docs/smartcalc.texi
+	texi2dvi $<
+	$(RM) smartcalc.aux smartcalc.cp smartcalc.log smartcalc.toc \
+		smartcalc.cps
+
 clean:
 	$(RM) $(OBJ)
 	$(RMDIR) $(OBJ_DIR)
@@ -123,6 +128,7 @@ fclean: clean
 	$(RM) $(TEST)
 	$(RM) -r $(GCOV_DIR)
 	$(RM) $(DIST_NAME).tar.gz
+	$(RM) ./smartcalc.dvi ./smartcalc.pdf
 
 format:
 	cp ../materials/linters/.clang-format $(SRC_DIR)/.
@@ -134,4 +140,4 @@ check_ui: ./resources/smartcalc.ui
 
 re: fclean all
 
-.PHONY: all install clean fclean re format check_ui
+.PHONY: all install clean fclean re format check_ui dvi

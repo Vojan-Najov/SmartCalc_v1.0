@@ -1,0 +1,118 @@
+\input texinfo
+@setfilename smartcalc.info
+@documentencoding UTF-8
+
+@settitle Smartcalc-v1.0
+
+@afourpaper
+
+@copying
+Copyright © 2023 School 21
+@end copying
+
+
+@titlepage
+@title Smartcalc-v1.0
+@subtitle Implementation of the calculator in C using the gtk4 framework.
+@author Carmine Cartman
+
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@headings off
+
+@contents
+
+@ifnottex
+@node Top
+@top Smartcalc example
+@insertcopying
+@end ifnottex
+
+@menu
+* Introduction :: Subject
+* Usage ::              
+@end menu
+
+@node Introduction
+@chapter Subject
+
+@cindex intro
+The SmartCalc v1.0 program must be implemented:
+@itemize *
+@item The program must be developed in C language of C11 standard using gcc compiler. You can use any additional QT libraries and modules
+@item The program code must be located in the src folder
+@item The program must be built with Makefile which contains standard set of targets for GNU-programs: all, install, uninstall, clean, dvi, dist, test, gcov_report. Installation directory could be arbitrary, except the building one
+@item The program must be developed according to the principles of structured programming
+@item When writing code it is necessary to follow the Google style
+@item Prepare full coverage of modules related to calculating expressions with unit-tests using the Check library
+@item GUI implementation, based on any GUI library with API for C89/C99/C11
+@item For Linix: GTK+, CEF, Qt
+@item For Mac: GTK+, Nuklear, raygui, microui, libagar, libui, IUP, LCUI, CEF, Qt
+@item Both integers and real numbers with a dot can be input into the program. You can optionally provide the input of numbers in exponential notation
+@item The calculation must be done after you complete entering the calculating expression and press the = symbol.
+@item Calculating arbitrary bracketed arithmetic expressions in infix notation
+@item Calculate arbitrary bracketed arithmetic expressions in infix notation with substitution of the value of the variable x as a number
+@item Plotting a graph of a function given by an expression in infix notation with the variable x (with coordinate axes, mark of the used scale and an adaptive grid)
+@item It is not necessary to provide the user with the ability to change the scale
+@item Domain and codomain of a function are limited to at least numbers from -1000000 to 1000000
+@item To plot a graph of a function it is necessary to additionally specify the displayed domain and codomain
+@item Verifiable accuracy of the fractional part is at least to 7 decimal places
+Users must be able to enter up to 255 characters
+Bracketed arithmetic expressions in infix notation must support the following arithmetic operations and mathematical functions
+@enumerate
+@item Brackets:       ( )
+@item Addition:       a + b          
+@item Subtraction:    a - b
+@item Multiplication: a * b
+@item Division:       a / b
+@item Power:          a ^ b
+@item Modulus:        a mod b
+@item Unary_plus:     +a
+@item Unary minus:    -a
+@item cosine: cos(x)
+@item sine: sin(x)
+@item tangent: tan(x)
+@item arc cosine: acos(x)
+@item arc sine: asin(x)
+@item arc tangent: atan(x)
+@item square root: sqrt(x)
+@item natural logarithm: ln(x)
+@item common logarith: log(x)
+@end enumerate
+
+@end itemize
+
+
+@node Usage
+@chapter Usage
+
+@itemize -
+@item The program is written in `C` language using the `GTK4` framework.
+@item Supports arithmetic operations: unary plus `+` and minus `-`, binary addition `+`, subtraction `-`, multiplication `*`, division `/`, modulus `mod` and exponentiation `^`.
+@item Supports functions: sine `sin`, cosine `cos`, tangent `tan`, arcsine `asin`, arccosine `acos`, arctangent `atan`, square root `sqrt`, natural logarithm `ln` and decimal logarithm `log`
+@item Supports any number of operator brackets`( )`
+@item Supports the assignment operation to a variable `x = expr`. It is possible to set only one variable named x
+@item Supports the definition a function from a single variable `f = expr`
+@item `$>make` for compilation:
+@item The program works in two modes:
+@item `$>./Smartcalc -t` for the command line interface mode
+@end itemize
+@image{./docs/misc/sc_1,400pt,200pt,,.eps}
+@page
+@itemize -
+@item `$>./Smartcalc` for the graphic user interface
+@end itemize
+@image{./docs/misc/sc_2,200pt,400pt,,.eps}
+@page
+@itemize -
+@item In graphical mode, the display of graphs of functions is supported
+@end itemize
+@image{./docs/misc/sc_3,400pt,300pt,,.eps}
+@itemize -
+@item `$>make dist` command creates an archive for further distribution
+@item `$>make install` and `$>make uninstall` to install and uninstall the program (default installation path is `~/bin`)
+@end itemize
+
+@bye
