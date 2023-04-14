@@ -10,5 +10,5 @@ Implementation of calculator.
 - `$>make` for compilation:
 - the program works in two modes:
   - `$>./Smartcalc -t` for the command line interface mode
-  - supports arithmetic operations: unary plus and minus, binary addition, subtraction, multiplication, division, modulus and exponentiation.
+  - supports arithmetic operations: unary plus(+) and minus(-), binary addition(+), subtraction(-), multiplication(\*), division(/), modulus(mod) and exponentiation(^).
   <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
