@@ -8,7 +8,10 @@ Implementation of calculator.
 ## Usage
 - The program is written in C using the GTK4 framework.
 - `$>make` for compilation:
-- the program works in two modes:
+- The program works in two modes:
   - `$>./Smartcalc -t` for the command line interface mode
-  - supports arithmetic operations: unary plus(+) and minus(-), binary addition(+), subtraction(-), multiplication(\*), division(/), modulus(mod) and exponentiation(^).
+  - Supports arithmetic operations: unary plus(`+`) and minus(`-`), binary addition(`+`), subtraction(`-`), multiplication(`*`), division(`/`), modulus(`mod`) and exponentiation(`^`).
+  - Supports functions: sine(`sin`), cosine(`cos`), tangent(`tan`), arcsine(`asin`), arccosine(`acos`), arctangent(`atan`), square root(`sqrt`), natural logarithm(`ln`) and decimal logarithm(`log`)
+
+supports any number of operator brackets
   <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
