@@ -20,4 +20,5 @@ Implementation of calculator.
     <img src="./docs/misc/sc_2.png" alt="sc_2" width="700"/>
   - In graphical mode, the display of graphs of functions is supported
     <img src="./docs/misc/sc_3.png" alt="sc_3" width="700"/>
-
+- `$>make dist` command creates an archive for further distribution
+- `$>make install` and `$>make uninstall` to install and uninstall the program (default installation path is `~/bin`)
