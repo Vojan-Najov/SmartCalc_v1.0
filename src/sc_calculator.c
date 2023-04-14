@@ -26,18 +26,27 @@ static void sc_div(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
 static void sc_mod(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
 static void sc_pow(sc_token_t *num1, sc_token_t *num2, sc_token_t *result);
 
-static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr);
-static int sc_handle_var(sc_deque_t *stack, sc_token_t *token, int is_expr);
-static int sc_handle_unary_op(sc_deque_t *stack, sc_token_t *token, int is_expr);
-static int sc_handle_function(sc_deque_t *stack, sc_token_t *token, int is_expr);
-static int sc_handle_binary_op(sc_deque_t *stack, sc_token_t *token, int is_expr);
+static int sc_calculate_aux(sc_deque_t *rpn,
+                            sc_deque_t *stack, int is_expr);
 
-static void (*unary_op_array[2])(sc_token_t *) = {
+static int sc_handle_var(sc_deque_t *stack,
+                         sc_token_t *token, int is_expr);
+
+static int sc_handle_unary_op(sc_deque_t *stack,
+                              sc_token_t *token, int is_expr);
+
+static int sc_handle_function(sc_deque_t *stack,
+                              sc_token_t *token, int is_expr);
+
+static int sc_handle_binary_op(sc_deque_t *stack,
+                               sc_token_t *token, int is_expr);
+
+static void (*unary_op_array[2])(sc_token_t*) = {
 	&sc_minus,
 	&sc_plus,
 };
 
-static void (*function_array[])(sc_token_t *) = {
+static void (*function_array[])(sc_token_t*) = {
 	&sc_cos,
 	&sc_sin,
 	&sc_tan,
@@ -50,7 +59,7 @@ static void (*function_array[])(sc_token_t *) = {
 	&sc_f,
 };
 
-static void (*binary_op_array[])(sc_token_t *, sc_token_t *, sc_token_t *) = {
+static void (*binary_op_array[])(sc_token_t*, sc_token_t*, sc_token_t*) = {
 	&sc_add,
 	&sc_sub,
 	&sc_mul,
@@ -114,7 +123,8 @@ int sc_calculation(sc_deque_t *rpn, double *result) {
 	return (err_status);
 }
 
-static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr) {
+static int sc_calculate_aux(sc_deque_t *rpn,
+                            sc_deque_t *stack, int is_expr) {
 	sc_token_t token;
 	int err_status = 0;
 
@@ -145,7 +155,8 @@ static int sc_calculate_aux(sc_deque_t *rpn, sc_deque_t *stack, int is_expr) {
 	return (err_status);
 }
 
-static int sc_handle_var(sc_deque_t *stack, sc_token_t *token, int is_expr) {
+static int sc_handle_var(sc_deque_t *stack,
+                         sc_token_t *token, int is_expr) {
 	double var;
 	int err_status;
 
@@ -164,7 +175,8 @@ static int sc_handle_var(sc_deque_t *stack, sc_token_t *token, int is_expr) {
 	return (err_status);
 }
 
-static int sc_handle_unary_op(sc_deque_t *stack, sc_token_t *token, int is_expr) {
+static int sc_handle_unary_op(sc_deque_t *stack,
+                              sc_token_t *token, int is_expr) {
 	sc_token_t operand;
 	int err_status;
 
@@ -187,7 +199,8 @@ static int sc_handle_unary_op(sc_deque_t *stack, sc_token_t *token, int is_expr)
 	return (err_status);
 }
 
-static int sc_handle_function(sc_deque_t *stack, sc_token_t *token, int is_expr) {
+static int sc_handle_function(sc_deque_t *stack,
+                              sc_token_t *token, int is_expr) {
 	sc_token_t operand;
 	int err_status;
 
@@ -218,7 +231,8 @@ static int sc_handle_function(sc_deque_t *stack, sc_token_t *token, int is_expr)
 	return (err_status);
 }
 
-static int sc_handle_binary_op(sc_deque_t *stack, sc_token_t *token, int is_expr) {
+static int sc_handle_binary_op(sc_deque_t *stack,
+                               sc_token_t *token, int is_expr) {
 	int err_status;
 	sc_token_t operand1, operand2;
 
@@ -227,7 +241,8 @@ static int sc_handle_binary_op(sc_deque_t *stack, sc_token_t *token, int is_expr
 		if (!stack->is_empty(stack)) {
 			operand1 = stack->pop_front(stack);
 			if (operand1.type == SC_NUMBER && operand2.type == SC_NUMBER) {
-				binary_op_array[token->value.binary_op](&operand1, &operand2, token);
+				binary_op_array[token->value.binary_op](&operand1,
+                                                        &operand2, token);
 				if (token->type == SC_WRONG_TOKEN) {
 					err_status = token->value.error;
 				} else {

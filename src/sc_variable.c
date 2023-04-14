@@ -81,10 +81,12 @@ void sc_restore_variable(void) {
 	var_status_ptr = _get_variable_status();
 	saved_var_ptr = _get_saved_variable_address();
 	saved_var_status_ptr = _get_saved_variable_status();
-	
+
 	if (*saved_var_status_ptr == SC_VAR_SET) {
 		*var_status_ptr = SC_VAR_SET;
 		*var_ptr = *saved_var_ptr;
+	} else {
+		*var_status_ptr = SC_VAR_UNSET;
 	}
 }
 
