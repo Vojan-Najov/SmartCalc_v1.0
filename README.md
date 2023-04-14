@@ -9,5 +9,6 @@ Implementation of calculator.
 - The program is written in C using the GTK4 framework.
 - `$>make` for compilation:
 - the program works in two modes:
-  * `$>./Smartcalc -t` for the command line interface mode \
-   <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
+  - `$>./Smartcalc -t` for the command line interface mode
+  - supports arithmetic operations: unary plus and minus, binary addition, subtraction, multiplication, division, modulus and exponentiation.
+  <img src="./docs/misc/sc_1.png" alt="sc_1" width="700"/>
