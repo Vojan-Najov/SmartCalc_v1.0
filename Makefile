@@ -15,7 +15,9 @@ TEST_OBJ_DIR = $(TEST_SRC_DIR)/test_objs
 GCOV_DIR = ./gcov_report
 GCOV_OBJ_DIR = $(GCOV_DIR)/objs
 
-SRC = $(wildcard $(SRC_DIR)/*.c)
+SRC := $(wildcard $(SRC_DIR)/*.c)
+SRC += $(SRC_DIR)/sc_resources.c
+
 OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
 
 TEST_SRC = $(wildcard $(TEST_SRC_DIR)/*test*.c)
@@ -25,6 +27,8 @@ GCOV_OBJ = $(addprefix $(GCOV_OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
 
 INCLD = $(wildcard $(INCLD_DIR)/*.h)
 TEST_INCLD = $(wildcard $(TEST_INCLD_DIR)/*.h)
+
+RESOURCES_DIR = ./resources
 
 CC = gcc
 MKDIR = mkdir -p
@@ -50,7 +54,7 @@ TEST_LIBS = -lcheck -lm
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) -g -o $@ $(OBJ) $(LIBS) $(GTK_LIBS)
+	$(CC) -o $@ $^ $(LIBS) $(GTK_LIBS)
 
 install: $(NAME)
 	install -d $(DESTDIR)$(PREFIX)/bin/
@@ -61,28 +65,42 @@ uninstall:
 
 dist: fclean
 	@$(MKDIR) $(DIST_NAME)
-	cp -r -f $(SRC_DIR) $(TEST_SRC_DIR) $(INCLD_DIR) README.md Makefile $(DIST_NAME)/
+	cp -r -f $(SRC_DIR) $(TEST_SRC_DIR) $(INCLD_DIR) $(RESOURCES_DIR) \
+		README.md Makefile $(DIST_NAME)
 	tar -czvf $(DIST_NAME).tar.gz $(DIST_NAME)
 	$(RM) -r $(DIST_NAME)
 
 $(TEST): $(NAME) $(TEST_OBJ)
-	$(CC) -g -o $@ $(TEST_OBJ) $(TEST_LIBS)
+	$(CC) -o $@ $(TEST_OBJ) $(TEST_LIBS)
 	./$(TEST) 2>>/dev/null
 
-$(REPORT): $(GCOV_OBJ) $(TEST)
-	$(CC) $(GCOV_FLAGS) $(GCOV_OBJ) -o $(NAME) $(LIBS) $(GTK_LIBS)
+$(REPORT): $(GCOV_OBJ) $(TEST_OBJ)
+	echo $(GCOV_OBJ)
+	$(CC) -o $(TEST) $(TEST_OBJ) $(TEST_LIBS)
+	$(CC) $(GCOV_FLAGS) $(GTK_CFLAGS) $(GCOV_OBJ) -o $(NAME) $(LIBS) $(GTK_LIBS)
 	./$(TEST) 2>>/dev/null;
 	@$(RM) $(GCOV_OBJ_DIR)/sc_gui*
 	@$(RM) $(GCOV_OBJ_DIR)/sc_plot*
+	@$(RM) $(GCOV_OBJ_DIR)/sc_resources*
 	gcov $(GCOV_OBJ_DIR)/*.gcno;
 	@mv *.gcov $(GCOV_OBJ_DIR);
 	lcov -c -t "s21_string" -o $(GCOV_DIR)/report.info -d $(GCOV_OBJ_DIR) \
 		--rc lcov_branch_coverage=1;
-	genhtml -o $(GCOV_DIR) $(GCOV_DIR)/report.info --rc lcov_branch_coverage=1
+	genhtml -o $(GCOV_DIR) $(GCOV_DIR)/report.info --rc \
+		lcov_branch_coverage=1
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 	@$(MKDIR) $(@D)
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/sc_resources.o: $(SRC_DIR)/sc_resources.c
+	@$(MKDIR) $(OBJ_DIR)
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $< -o $@
+	
+$(SRC_DIR)/sc_resources.c: check_ui
+	glib-compile-resources \
+		resources/smartcalc.gresources.xml --target=src/sc_resources.c \
+		--sourcedir=$(RESOURCES_DIR) --generate-source
 
 $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c  $(TEST_INCLD)
 	@$(MKDIR) $(@D)
@@ -100,6 +118,7 @@ clean:
 	$(RM) -r $(GCOV_OBJ_DIR)
 
 fclean: clean
+	$(RM) $(SRC_DIR)/sc_resources.c
 	$(RM) $(NAME)
 	$(RM) $(TEST)
 	$(RM) -r $(GCOV_DIR)
@@ -110,7 +129,7 @@ format:
 	clang-format -i $(SRC) $(TEST_SRC) $(INCLD) $(TEST_INCLD)
 	$(RM) $(SRC_DIR)/.clang-format
 
-check_ui:
+check_ui: ./resources/smartcalc.ui
 	gtk4-builder-tool validate ./resources/smartcalc.ui
 
 re: fclean all
