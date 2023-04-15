@@ -16,6 +16,7 @@ GCOV_DIR = ./gcov_report
 GCOV_OBJ_DIR = $(GCOV_DIR)/objs
 
 SRC := $(wildcard $(SRC_DIR)/*.c)
+SRC_TMP = $(wildcard $(SRC_DIR)/*.c)
 SRC += $(SRC_DIR)/sc_resources.c
 
 OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
@@ -133,9 +134,9 @@ fclean: clean
 	$(RM) ./smartcalc.dvi ./smartcalc.pdf
 
 format:
-	cp ../materials/linters/.clang-format $(SRC_DIR)/.
-	clang-format -i $(SRC) $(TEST_SRC) $(INCLD) $(TEST_INCLD)
-	$(RM) $(SRC_DIR)/.clang-format
+	cp ./linters/.clang-format .
+	clang-format -i $(SRC_TMP) $(TEST_SRC) $(INCLD) $(TEST_INCLD)
+	$(RM) .clang-format
 
 check_ui: ./resources/smartcalc.ui
 	gtk4-builder-tool validate ./resources/smartcalc.ui
