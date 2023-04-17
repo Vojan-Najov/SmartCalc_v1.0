@@ -17,9 +17,10 @@ GCOV_OBJ_DIR = $(GCOV_DIR)/objs
 
 SRC := $(wildcard $(SRC_DIR)/*.c)
 SRC_TMP = $(wildcard $(SRC_DIR)/*.c)
-SRC += $(SRC_DIR)/sc_resources.c
+#SRC += $(SRC_DIR)/sc_resources.c
 
-OBJ = $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
+OBJ := $(addprefix $(OBJ_DIR)/, $(notdir $(SRC:.c=.o)))
+OBJ += $(OBJ_DIR)/sc_resources.o
 
 TEST_SRC = $(wildcard $(TEST_SRC_DIR)/*test*.c)
 TEST_OBJ = $(addprefix $(TEST_OBJ_DIR)/, $(notdir $(TEST_SRC:.c=.o)))
@@ -36,7 +37,6 @@ MKDIR = mkdir -p
 RM = rm -f
 RMDIR = rm -rf
 PKG-CONFIG = $(shell which pkg-config)
-#PKG-CONFIG = /opt/goinfre/ccartman/homebrew/bin/pkg-config
 
 ifeq ($(PREFIX),)
     #PREFIX := /usr/local
@@ -55,7 +55,7 @@ TEST_LIBS = -lcheck -lm
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) -o $@ $^ $(LIBS) $(GTK_LIBS)
+	$(CC) -g $^ -o $@ $(LIBS) $(GTK_LIBS)
 
 install: $(NAME)
 	install -d $(DESTDIR)$(PREFIX)/bin/
@@ -67,7 +67,7 @@ uninstall:
 dist: fclean
 	@$(MKDIR) $(DIST_NAME)
 	cp -r -f $(SRC_DIR) $(TEST_SRC_DIR) $(INCLD_DIR) $(RESOURCES_DIR) \
-		README.md Makefile $(DIST_NAME)
+		README.md Makefile docs $(DIST_NAME)
 	tar -czvf $(DIST_NAME).tar.gz $(DIST_NAME)
 	$(RM) -r $(DIST_NAME)
 
@@ -78,7 +78,8 @@ $(TEST): $(NAME) $(TEST_OBJ)
 $(REPORT): $(GCOV_OBJ) $(TEST_OBJ)
 	echo $(GCOV_OBJ)
 	$(CC) -o $(TEST) $(TEST_OBJ) $(TEST_LIBS)
-	$(CC) $(GCOV_FLAGS) $(GTK_CFLAGS) $(GCOV_OBJ) -o $(NAME) $(LIBS) $(GTK_LIBS)
+	$(CC) $(GCOV_FLAGS) $(GTK_CFLAGS) $(GCOV_OBJ) \
+		-o $(NAME) $(LIBS) $(GTK_LIBS)
 	./$(TEST) 2>>/dev/null;
 	@$(RM) $(GCOV_OBJ_DIR)/sc_gui*
 	@$(RM) $(GCOV_OBJ_DIR)/sc_plot*
@@ -94,10 +95,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 	@$(MKDIR) $(@D)
 	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/sc_resources.o: $(SRC_DIR)/sc_resources.c
-	@$(MKDIR) $(OBJ_DIR)
-	$(CC) $(CFLAGS) $(GTK_CFLAGS) -c $< -o $@
-	
 $(SRC_DIR)/sc_resources.c: check_ui
 	glib-compile-resources \
 		resources/smartcalc.gresources.xml --target=src/sc_resources.c \
@@ -109,7 +106,7 @@ $(TEST_OBJ_DIR)/%.o: $(TEST_SRC_DIR)/%.c  $(TEST_INCLD)
 
 $(GCOV_OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCLD)
 	@$(MKDIR) $(@D)
-	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(GCOV_FLAGS) -I$(INCLD_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) $(GTK_CFLAGS) $(GCOV_FLAGS) -c $< -o $@
 
 dvi: ./docs/smartcalc.texi
 	texi2dvi $<
@@ -143,4 +140,4 @@ check_ui: ./resources/smartcalc.ui
 
 re: fclean all
 
-.PHONY: all install clean fclean re format check_ui dvi
+.PHONY: all install unistall dist clean fclean re format check_ui dvi
