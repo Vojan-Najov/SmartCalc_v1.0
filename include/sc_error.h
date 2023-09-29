@@ -17,32 +17,24 @@
 #define SC_SUCCESS 0
 #define SC_FAILURE 1
 
-#define SC_HELP_MESSAGE \
-	"Usage:\n" \
-	"      SmartCalc_v1,0    -- with graphical user interface.\n" \
-	"      SmartCalc_v1.0 -t -- with command line interface.\n" \
-	"      SmartCalc_v1.0 -h -- print help message.\n"
+#define SC_HELP_MESSAGE                                         \
+  "Usage:\n"                                                    \
+  "      SmartCalc_v1,0    -- with graphical user interface.\n" \
+  "      SmartCalc_v1.0 -t -- with command line interface.\n"   \
+  "      SmartCalc_v1.0 -h -- print help message.\n"
 
-#define SC_BAD_ALLOC_MESSAGE \
-	"memory error: bad allocation"
-#define SC_STDIN_ERROR_MESSAGE \
-	"stdin: error"
-#define SC_BAD_TOKEN_MESSAGE \
-	"syntax error: bad token"
-#define SC_BAD_EXPR_MESSAGE \
-	"syntax error: invalid expression"
-#define SC_BAD_BRACKETS_MESSAGE \
-	"syntax error: unpaired brackets"
+#define SC_BAD_ALLOC_MESSAGE "memory error: bad allocation"
+#define SC_STDIN_ERROR_MESSAGE "stdin: error"
+#define SC_BAD_TOKEN_MESSAGE "syntax error: bad token"
+#define SC_BAD_EXPR_MESSAGE "syntax error: invalid expression"
+#define SC_BAD_BRACKETS_MESSAGE "syntax error: unpaired brackets"
 #define SC_BAD_FUNCDEF_MESSAGE \
-	"syntax error: no parentheses found near the function"
-#define SC_BAD_VAR_MESSAGE \
-	"syntax error: variable not set"
-#define SC_BAD_FUNC_MESSAGE \
-	"syntax error: function not set"
+  "syntax error: no parentheses found near the function"
+#define SC_BAD_VAR_MESSAGE "syntax error: variable not set"
+#define SC_BAD_FUNC_MESSAGE "syntax error: function not set"
 #define SC_BAD_RECURSIVE_MESSAGE \
-	"syntax error: recursive definitions are not supported"
-#define SC_DEVIDE_BY_ZERO_MESSAGE \
-	"calculation error: devide by zero"
+  "syntax error: recursive definitions are not supported"
+#define SC_DEVIDE_BY_ZERO_MESSAGE "calculation error: devide by zero"
 
 /* Utilitary function, which print error message in stderr. */
 
@@ -77,7 +69,7 @@ char *sc_gui_error_scanner(sc_deque_t *lexems);
 /* Functions for handling scanner's errors. */
 
 void sc_cli_error_parser(int err_status, sc_deque_t *lexems, sc_deque_t *rpn);
-	
+
 char *sc_gui_error_parser(int err_status, sc_deque_t *lexems, sc_deque_t *rpn);
 
 /* Functions for handling calculation's errors. */
